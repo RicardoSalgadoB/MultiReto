@@ -1,0 +1,11 @@
+---
+title: "Etapa 1"
+format: docx
+editor: visual
+---
+
+```{r}
+library(maps)
+map("world")
+```
+
