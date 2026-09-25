@@ -1,4 +1,4 @@
-# MA2003B_Blank
+# MA2003B - Grupo 201 - Equipo 6
 
 This is an R project initialized with renv for dependency management.
 
