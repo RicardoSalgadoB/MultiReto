@@ -1,0 +1,75 @@
+---
+title: "CheckDist"
+format: docx
+editor: visual
+---
+
+```{r}
+ruta = "data/BD 2025.xlsx"
+data2025 = readxl::read_excel(ruta)
+```
+
+```{r}
+data2025 = data2025[-1,]
+to_num = function(data){
+  data$CO = as.numeric(data$CO)
+  data$NO = as.numeric(data$NO)
+  data$NO2 = as.numeric(data$NO2)
+  data$NOX = as.numeric(data$NOX)
+  data$O3 = as.numeric(data$O3)
+  data$PM10 = as.numeric(data$PM10)
+  data$PM2.5 = as.numeric(data$PM2.5)
+  data$SO2 = as.numeric(data$SO2)
+  return(data)
+}
+data2025 = to_num(data2025)
+```
+
+```{r}
+hist(data2025$CO)
+quantile(data2025$CO, c(0.9, 0.95), na.rm = TRUE)
+ecdf(data2025$CO)(2)
+```
+
+
+```{r}
+hist(data2025$NO)
+quantile(data2025$NO, c(0.9, 0.95), na.rm = TRUE)
+ecdf(data2025$NO)(106)
+```
+
+```{r}
+hist(data2025$NO2)
+quantile(data2025$NO2, c(0.9, 0.95), na.rm = TRUE)
+ecdf(data2025$NO2)(53)
+```
+
+```{r}
+hist(data2025$NOX)
+quantile(data2025$NOX, c(0.9, 0.95), na.rm = TRUE)
+ecdf(data2025$NOX)(106)
+```
+
+```{r}
+hist(data2025$O3)
+quantile(data2025$O3, c(0.9, 0.95), na.rm = TRUE)
+ecdf(data2025$O3)(90)
+```
+
+```{r}
+hist(data2025$PM10)
+quantile(data2025$PM10, c(0.9, 0.95), na.rm = TRUE)
+ecdf(data2025$PM10)(132)
+```
+
+```{r}
+hist(data2025$PM2.5)
+quantile(data2025$PM2.5, c(0.9, 0.95), na.rm = TRUE)
+ecdf(data2025$PM2.5)(79)
+```
+
+```{r}
+hist(data2025$SO2)
+quantile(data2025$SO2, c(0.9, 0.95), na.rm = TRUE)
+ecdf(data2025$SO2)(75)
+```
