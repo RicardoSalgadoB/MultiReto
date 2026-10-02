@@ -8,4 +8,3 @@ editor: visual
 library(maps)
 map("world")
 ```
-
