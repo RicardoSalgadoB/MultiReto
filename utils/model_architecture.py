@@ -122,9 +122,17 @@ class GCN(nn.Module):
     """GCN implementation
     Academically borrowed from https://github.com/senadkurtisi/pytorch-GCN/tree/main
     """
-    def __init__(self, in_features, hidden_dim, out_features=2, nlayers=24, use_bias=True) -> None:
-        """(l * t, ) 
-
+    def __init__(
+        self, 
+        in_features, 
+        hidden_dim, 
+        out_features=2, 
+        num_nodes=360,
+        n_outputs=15,
+        nlayers=24, 
+        use_bias=True
+    ) -> None:
+        """
         in_features: d_set + d_mask + ndim_v
         hidden_dim: ...
         out_features: 2 for 2 ks per node
@@ -136,21 +144,27 @@ class GCN(nn.Module):
         if hidden_dim is None:
             hidden_dim = in_features
             
-        layers =  [GCNLayer(in_features, hidden_dim, bias=use_bias)]
-        layers += [GCNLayer(hidden_dim, hidden_dim, bias=use_bias) for i in range(nlayers)]
-        layers += [nn.Linear(hidden_dim, out_features, bias=False)]
-        
-        self.layers = nn.Sequential(*layers)
+        self.layers =  nn.ModuleList(
+            [GCNLayer(in_features, hidden_dim, bias=use_bias)]
+          + [GCNLayer(hidden_dim, hidden_dim, bias=use_bias) for i in range(nlayers)]
+        )
+        self.final = nn.Sequential(
+            nn.Linear(hidden_dim, out_features, bias=False),
+            nn.Sigmoid(),
+            nn.Linear(out_features, n_outputs)
+        )
         self.in_features = in_features
         self.hidden_dim = hidden_dim
         self.out_features = in_features
         
         
-    def forward(self, h):
-        return self.layers(h)
-        
+    def forward(self, h, L):
+        for layer in self.layers:
+            h = layer(h, L)
+        h = self.final(h)
+        return h
 
-    
+
 class Constrainer(nn.Module):
     """Processes the output of NN to make sure it satisfies the generalized Pareto constraints.
     This implement the EXTREME VALUE MODELING MODULE.
@@ -195,7 +209,7 @@ class Combiner(nn.Module):
         # Create constrainer to enforce GPD constraints
         self.constrainer = Constrainer()
         
-        # ...
+        # Save the final output for the model
         self.odim = gcn_params["out_features"]
         
     
@@ -230,14 +244,14 @@ class Combiner(nn.Module):
         # Pass through GCN
         out.reshape([bsize, -1, l*t])           # (d_set + d_mask + ndim_v, l * t)
         out.permute([0, 2, 1])                  # (l * t, d_set + d_mask + ndim_v) 
-        out = self.gcn(out)                     # (l * t, d_set + d_mask + ndim_v) -> (l * t, 2)
+        out = self.gcn(out)                     # (l * t, d_set + d_mask + ndim_v) -> (l, 2)
 
         out_dim = out.shape[2]                      # 2 - error here maybe
-        out = out.reshape([bsize, out_dim, l*t])    # (2, l * t)
-        out = out.permute([0, 2, 1])                # (l * t, 2)
+        out = out.reshape([bsize, out_dim, l*t])    # (2, l)
+        out = out.permute([0, 2, 1])                # (l, 2)
         
         # Constrain output
-        final_out = self.constrainer(out[:, :, :], maxis=maxis) # (l * t, 2)
+        final_out = self.constrainer(out[:, :, :], maxis=maxis) # (l, 2)
         
-        final_out = final_out.reshape([bsize, l, t, self.odim]) # (l, t, 2)
+        final_out = final_out.reshape([bsize, l, self.odim]) # (l, 2)
         return final_out
