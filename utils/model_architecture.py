@@ -4,6 +4,7 @@ import torch
 from torch import nn
 
 from utils.haversine_distance import compute_adj_matrix
+from utils.graph_constructor import Oceanus
 
 class DeepSet(nn.Module):
     """Implementation of Deep Set.
@@ -163,30 +164,11 @@ class GCN(nn.Module):
         self.out_features = in_features
         
         
-    def get_normalized_laplacian_matrix(self, D: torch.Tensor):
-        # Adjacency Matrix
-        A = torch.exp( -D**2 / self.sigma_sq )
-        mask = A <= self.epsilon
-        A[mask] = 0.0
-        
-        # Laplacian matrix
-        degree_vector = torch.sum(A, dim=1)
-        D = torch.diag(degree_vector)
-        L = D - A
-        
-        # Normalization
-        zeta_max = torch.max(torch.linalg.eigvalsh(L))
-        I_N = torch.eye(L.shape[0])
-        
-        return 2*L / zeta_max - I_N
-        
-        
-    def forward(self, h: torch.Tensor, D: torch.Tensor):
+    def forward(self, h: torch.Tensor, L: torch.Tensor):
         """
         h: data for each layer (l * t, d_set + d_mask + ndim_v)
         D: distance matrix
         """
-        L = self.get_normalized_laplacian_matrix(D)
         for layer in self.layers:
             h = layer(h, L)
         h = self.node_head(h)
@@ -222,12 +204,15 @@ class Combiner(nn.Module):
     
     Academically borrowed from Wilson et al. (2022) (https://github.com/TylerPWilson/deepGPD/blob/main/model.py).
     """
-    def __init__(self, ds_params: dict, gcn_params: dict) -> None:
+    def __init__(self, graph_params: dict, ds_params: dict, gcn_params: dict) -> None:
         """
         ds_params (dict): Parameters for the DeepSet Network
         gcn_params (dict): Parameters for the Graph Convolutional Neural Network
         """
         super().__init__()
+        
+        # Create Graph Constructor
+        self.graph_constructor = Oceanus(**graph_params)
 
         # Create GCN
         self.gcn = GCN(**gcn_params)
@@ -280,10 +265,13 @@ class Combiner(nn.Module):
         else:
             out = sets
             
+        # Construct graph
+        L = self.graph_constructor(D)
+            
         # Pass through GCN
         out.reshape([bsize, -1, l*t])           # (d_set + d_mask + ndim_v, l * t)
         out.permute([0, 2, 1])                  # (l * t, d_set + d_mask + ndim_v) 
-        out = self.gcn(out, D)                  # (l * t, d_set + d_mask + ndim_v) -> (l, 2)
+        out = self.gcn(out, L)                  # (l * t, d_set + d_mask + ndim_v) -> (l, 2)
 
         out_dim = out.shape[2]                      # 2 - error here maybe
         out = out.reshape([bsize, out_dim, l*t])    # (2, l)
