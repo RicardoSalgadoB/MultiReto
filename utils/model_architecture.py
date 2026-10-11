@@ -177,6 +177,7 @@ class GCN(nn.Module):
         # Normalization
         zeta_max = torch.max(torch.linalg.eigvalsh(L))
         I_N = torch.eye(L.shape[0])
+        
         return 2*L / zeta_max - I_N
         
         
