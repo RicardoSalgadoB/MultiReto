@@ -30,20 +30,19 @@ def haversine_matrix(
 def compute_adj_matrix(
     D: torch.Tensor,
     sigma_sq: float = 1.0,
-    epsilon: float|None = None
+    epsilon: float = 0.0
 ):
     """Calculates the weighted adjacency matrix.
 
     Args:
         D (torch.Tensor): Distance matrix between coordinates
         sigma_sq (float, optional): Defaults to 1.0.
-        epsilon (float | None, optional): Defaults to None.
+        epsilon (float, optional): Defaults to 0.0.
     """
     A = torch.exp( -D**2 / sigma_sq )
     
-    if epsilon:
-        mask = A <= epsilon
-        A[mask] = 0.0
+    mask = A <= epsilon
+    A[mask] = 0.0
     
     return A
 

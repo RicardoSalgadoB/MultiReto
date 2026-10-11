@@ -1,9 +1,9 @@
-from typing import Any
-
-import torch
-import numpy as np
-from torch import nn
 import itertools
+import numpy as np
+import torch
+from torch import nn
+
+from utils.haversine_distance import compute_adj_matrix
 
 class DeepSet(nn.Module):
     """Implementation of Deep Set.
@@ -144,24 +144,52 @@ class GCN(nn.Module):
         if hidden_dim is None:
             hidden_dim = in_features
             
+        # Graph Construction Parameters
+        self.sigma_sq = nn.Parameter(torch.FloatTensor(1.0))
+        self.epsilon = nn.Parameter(torch.FloatTensor(0.0))
+            
+        # Neural Network
         self.layers =  nn.ModuleList(
             [GCNLayer(in_features, hidden_dim, bias=use_bias)]
           + [GCNLayer(hidden_dim, hidden_dim, bias=use_bias) for i in range(nlayers)]
         )
-        self.final = nn.Sequential(
+        self.node_head = nn.Sequential(
             nn.Linear(hidden_dim, out_features, bias=False),
             nn.Sigmoid(),
-            nn.Linear(out_features, n_outputs)
         )
+        self.readout = nn.Linear(num_nodes, n_outputs)
         self.in_features = in_features
         self.hidden_dim = hidden_dim
         self.out_features = in_features
         
         
-    def forward(self, h, L):
+    def get_normalized_laplacian_matrix(self, D: torch.Tensor):
+        # Adjacency Matrix
+        A = torch.exp( -D**2 / self.sigma_sq )
+        mask = A <= self.epsilon
+        A[mask] = 0.0
+        
+        # Laplacian matrix
+        degree_vector = torch.sum(A, dim=1)
+        D = torch.diag(degree_vector)
+        L = D - A
+        
+        # Normalization
+        zeta_max = torch.max(torch.linalg.eigvalsh(L))
+        I_N = torch.eye(L.shape[0])
+        return 2*L / zeta_max - I_N
+        
+        
+    def forward(self, h: torch.Tensor, D: torch.Tensor):
+        """
+        h: data for each layer (l * t, d_set + d_mask + ndim_v)
+        D: distance matrix
+        """
+        L = self.get_normalized_laplacian_matrix(D)
         for layer in self.layers:
             h = layer(h, L)
-        h = self.final(h)
+        h = self.node_head(h)
+        h = self.readout(h.transpose(-1, -2)).transpose(-1, -2)
         return h
 
 
@@ -213,7 +241,17 @@ class Combiner(nn.Module):
         self.odim = gcn_params["out_features"]
         
     
-    def forward(self, vecs: torch.Tensor, sets: torch.Tensor, maxis=None):
+    def forward(self, vecs: torch.Tensor, sets: torch.Tensor, D: torch.Tensor, maxis=None):
+        """
+        Args:
+            vecs (torch.Tensor): Features per node per hour (shape: num. features, num. locations, num. hours)
+            sets (torch.Tensor): Excesses in the last time window
+            D (torch.Tensor): Distance matrix calculated with haversine distance
+            maxis: ... . Defaults to None.
+
+        Returns:
+            torch.Tensor: GPD parameters for each location
+        """
         # Save shape information    Assuming l to be location index and t to be time index
         if vecs is not None:
             bsize, ndim_v, l, t = vecs.shape    # Shape: (ndim_v, l, t)
@@ -244,7 +282,7 @@ class Combiner(nn.Module):
         # Pass through GCN
         out.reshape([bsize, -1, l*t])           # (d_set + d_mask + ndim_v, l * t)
         out.permute([0, 2, 1])                  # (l * t, d_set + d_mask + ndim_v) 
-        out = self.gcn(out)                     # (l * t, d_set + d_mask + ndim_v) -> (l, 2)
+        out = self.gcn(out, D)                  # (l * t, d_set + d_mask + ndim_v) -> (l, 2)
 
         out_dim = out.shape[2]                      # 2 - error here maybe
         out = out.reshape([bsize, out_dim, l*t])    # (2, l)
