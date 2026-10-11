@@ -42,18 +42,23 @@ class Oceanus(NormalizedLaplacianMatrixGenerator):
         super().__init__(num_hours)
         
     def compute_big_matrix(self, A_small: torch.Tensor) -> torch.Tensor:
-        rows = []
-        for i in self.num_hours:
-            col = []
-            for j in self.num_hours:
-                if i == j:
-                    col.append(A_small)
-                elif i-1 == j or i+1 == j:
-                    col.append(torch.eye(A_small.shape[0]))
-                else:
-                    col.append(torch.zeros_like(A_small))
-            rows.append(torch.cat(col, dim=0))
-        return torch.cat(rows, dim=1)
+        N = self.num_hours
+        d = A_small.shape[0]
+        device, dtype = A_small.device, A_small.dtype
+        
+        # Main diagonal
+        I_N = torch.eye(N, device=device, dtype=dtype)
+        diag_blocks = torch.kron(I_N, A_small)
+        
+        # Off-diagonal
+        off_diag_mask = (
+            torch.diag(torch.ones(N-1, device=device, dtype=dtype), diagonal=1)
+          + torch.diag(torch.ones(N-1, device=device, dtype=dtype), diagonal=-1)
+        )
+        off_diag_blocks = torch.kron(off_diag_mask, torch.eye(d, device=device, dtype=dtype))
+        
+        # Combine and return
+        return diag_blocks + off_diag_blocks
     
 
 class Coeus(NormalizedLaplacianMatrixGenerator):
@@ -64,18 +69,23 @@ class Coeus(NormalizedLaplacianMatrixGenerator):
         super().__init__(num_hours)
         
     def compute_big_matrix(self, A_small: torch.Tensor) -> torch.Tensor:
-        rows = []
-        for i in self.num_hours:
-            col = []
-            for j in self.num_hours:
-                if i == j:
-                    col.append(A_small)
-                elif i-1 == j or i+1 == j:
-                    col.append(A_small)
-                else:
-                    col.append(torch.zeros_like(A_small))
-            rows.append(torch.cat(col, dim=0))
-        return torch.cat(rows, dim=1)
+        N = self.num_hours
+        d = A_small.shape[0]
+        device, dtype = A_small.device, A_small.dtype
+        
+        # Main diagonal
+        I_N = torch.eye(N, device=device, dtype=dtype)
+        diag_blocks = torch.kron(I_N, A_small)
+        
+        # Off-diagonal
+        off_diag_mask = (
+            torch.diag(torch.ones(N-1, device=device, dtype=dtype), diagonal=1)
+            + torch.diag(torch.ones(N-1, device=device, dtype=dtype), diagonal=-1)
+        )
+        off_diag_blocks = torch.kron(off_diag_mask, A_small)
+        
+        # Combine and return
+        return diag_blocks + off_diag_blocks
     
 
 class Crius(NormalizedLaplacianMatrixGenerator):
@@ -87,18 +97,23 @@ class Crius(NormalizedLaplacianMatrixGenerator):
         self.weight = nn.Parameter(torch.FloatTensor(0.5))
         
     def compute_big_matrix(self, A_small: torch.Tensor) -> torch.Tensor:
-        rows = []
-        for i in self.num_hours:
-            col = []
-            for j in self.num_hours:
-                if i == j:
-                    col.append(A_small)
-                elif i-1 == j or i+1 == j:
-                    col.append(A_small * self.weight)
-                else:
-                    col.append(torch.zeros_like(A_small))
-            rows.append(torch.cat(col, dim=0))
-        return torch.cat(rows, dim=1)
+        N = self.num_hours
+        d = A_small.shape[0]
+        device, dtype = A_small.device, A_small.dtype
+        
+        # Main diagonal
+        I_N = torch.eye(N, device=device, dtype=dtype)
+        diag_blocks = torch.kron(I_N, A_small)
+        
+        # Off-diagonal
+        off_diag_mask = (
+            torch.diag(torch.ones(N-1, device=device, dtype=dtype), diagonal=1)
+            + torch.diag(torch.ones(N-1, device=device, dtype=dtype), diagonal=-1)
+        )
+        off_diag_blocks = torch.kron(off_diag_mask, A_small*self.weight)
+        
+        # Combine and return
+        return diag_blocks + off_diag_blocks
     
     
 class Hyperion(NormalizedLaplacianMatrixGenerator):
@@ -109,16 +124,13 @@ class Hyperion(NormalizedLaplacianMatrixGenerator):
         super().__init__(num_hours)
         
     def compute_big_matrix(self, A_small: torch.Tensor) -> torch.Tensor:
-        rows = []
-        for i in self.num_hours:
-            col = []
-            for j in self.num_hours:
-                if i == j:
-                    col.append(A_small)
-                else:
-                    col.append(torch.zeros_like(A_small))
-            rows.append(torch.cat(col, dim=0))
-        return torch.cat(rows, dim=1)
+        N = self.num_hours
+        d = A_small.shape[0]
+        device, dtype = A_small.device, A_small.dtype
+        
+        # Main diagonal
+        I_N = torch.eye(N, device=device, dtype=dtype)
+        return torch.kron(I_N, A_small)
     
     
 class Iapetus(NormalizedLaplacianMatrixGenerator):
@@ -130,17 +142,15 @@ class Iapetus(NormalizedLaplacianMatrixGenerator):
         self.p = nn.Parameter(torch.FloatTensor(0.2))
         
     def compute_big_matrix(self, A_small: torch.Tensor) -> torch.Tensor:
-        rows = []
-        for i in self.num_hours:
-            col = []
-            for j in self.num_hours:
-                if i == j:
-                    col.append(A_small)
-                else:
-                    col.append(torch.zeros_like(A_small))
-            rows.append(torch.cat(col, dim=0))
-        big_matrix = torch.cat(rows, dim=1)
+        N = self.num_hours
+        d = A_small.shape[0]
+        device, dtype = A_small.device, A_small.dtype
         
+        # Main diagonal
+        I_N = torch.eye(N, device=device, dtype=dtype)
+        big_matrix = torch.kron(I_N, A_small)
+        
+        # Affect random connections
         mask = (torch.rand_like(big_matrix) < self.p)
         alterations = (2*torch.rand_like(big_matrix) - 1)/2
         big_matrix = torch.clamp(big_matrix[mask]+alterations[mask], min=0.0, max=1.0)
