@@ -127,7 +127,7 @@ def add_maxis(train_data: dict, *other_data: dict) -> None:
     """
     y = train_data["y"]
     y_inf = torch.where(torch.isfinite(y), y, torch.full_like(y, float("-inf")))
-    train_max = y_inf.amax(dim=0)
+    train_max = y_inf.amax(dim=(0, 1))
     train_max = torch.where(torch.isinf(train_max), torch.ones_like(train_max), train_max)
     for data in (train_data, *other_data):
         data["maxis"] = train_max.expand_as(data["y"]).clone()
@@ -159,6 +159,7 @@ def gpd_nll(xi, sigma, y, mask=None, xi_eps=1e-4, min_arg=1e-6):
     Returns:
         Tensor escalar con la NLL promedio sobre las entradas válidas
     """
+    y = y.squeeze()
     if y.dim() == 2:    # Si la forma es (B, l) pasar a (B, l, 1)
         y = y.unsqueeze(2)
         if mask is not None:
@@ -331,6 +332,7 @@ def training_loop(model: nn.Module, train_data: dict, val_data: Optional[dict],
         "val_xi_mean", "val_sigma_mean") y "best_val_nll". Sirve para graficar las curvas
     """
     set_seed(config.seed)
+    torch.autograd.set_detect_anomaly(True)
     device = torch.device(config.device)
     model.to(device)
     D = D.to(device)

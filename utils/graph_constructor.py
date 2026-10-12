@@ -7,8 +7,8 @@ class NormalizedLaplacianMatrixGenerator(nn.Module):
         
         # Graph Construction Parameters
         self.num_hours = num_hours
-        self.sigma_sq = nn.Parameter(torch.FloatTensor(1.0))
-        self.epsilon = nn.Parameter(torch.FloatTensor(0.0))
+        self.sigma_sq = nn.Parameter(torch.tensor(1.0))
+        self.epsilon = nn.Parameter(torch.tensor(0.0))
         
     def compute_big_matrix(self, A_small) -> torch.Tensor:
         pass
@@ -17,19 +17,19 @@ class NormalizedLaplacianMatrixGenerator(nn.Module):
         # Adjacency Matrix
         A_small = torch.exp( -D**2 / self.sigma_sq )
         mask = A_small <= self.epsilon
-        A_small[mask] = 0.0
+        A_small.masked_fill(mask, 0.0)
         
         # Compute big matrix
         A = self.compute_big_matrix(A_small) 
         
         # Laplacian matrix
         degree_vector = torch.sum(A, dim=1)
-        D = torch.diag(degree_vector)
-        L = D - A
+        D_matrix = torch.diag(degree_vector)
+        L = D_matrix - A
         
         # Normalization
         zeta_max = torch.max(torch.linalg.eigvalsh(L))
-        I_N = torch.eye(L.shape[0])
+        I_N = torch.eye(L.shape[0], dtype=L.dtype, device=L.device)
         
         return 2*L / zeta_max - I_N
 
@@ -94,7 +94,7 @@ class Crius(NormalizedLaplacianMatrixGenerator):
     """
     def __init__(self, num_hours):
         super().__init__(num_hours)
-        self.weight = nn.Parameter(torch.FloatTensor(0.5))
+        self.weight = nn.Parameter(torch.tensor(0.5))
         
     def compute_big_matrix(self, A_small: torch.Tensor) -> torch.Tensor:
         N = self.num_hours
@@ -139,7 +139,7 @@ class Iapetus(NormalizedLaplacianMatrixGenerator):
     """
     def __init__(self, num_hours):
         super().__init__(num_hours)
-        self.p = nn.Parameter(torch.FloatTensor(0.2))
+        self.p = nn.Parameter(torch.tensor(0.2))
         
     def compute_big_matrix(self, A_small: torch.Tensor) -> torch.Tensor:
         N = self.num_hours

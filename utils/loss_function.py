@@ -24,10 +24,14 @@ def gp_penalized(raw_samples, xi, sigma):
     else:
         samples = raw_samples
         
+    samples = samples.squeeze()
     theo_maxes = theoretical_max(xi, sigma)
+    theo_maxes = theo_maxes[:, :, np.newaxis]
     nan_mask = np.isnan(samples)
     mask = (samples <= theo_maxes)
     cur_samples = samples
+    xi = xi[:, :, np.newaxis]
+    sigma = sigma[:, :, np.newaxis]
     log_thing = 1 + xi * cur_samples / sigma
     
     log_thing[(~mask) & (~nan_mask)] = 1e-6

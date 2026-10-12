@@ -28,7 +28,7 @@ class DeepSet(nn.Module):
         self.sodim = sodim
         self.odim = odim
         self.nlayers = nlayers
-        self.snlayers = nlayers
+        self.snlayers = snlayers
         
         # Middle layers of element processor
         elm_mids = list(itertools.chain(
@@ -113,7 +113,8 @@ class GCNLayer(nn.Module):
         
     def forward(self, h, L):        # N: Num. nodes / M: Num. features
         h = h @ self.weight         # Shapes: (N, M_in) @ (M_in, M_out) -> (N, M_out)
-        h = torch.sparse.mm(L, h)   # (N, N) @ (N, M_out) -> (N, M_out)
+        L = L.unsqueeze(0)
+        h = L @ h   # (N, N) @ (N, M_out) -> (N, M_out)
         if self.bias is not None:
             h += self.bias          # (N, M_out) + (N, N)@(1, M_out) -> (N, M_out)
         return self.activation(h)
@@ -146,8 +147,8 @@ class GCN(nn.Module):
             hidden_dim = in_features
             
         # Graph Construction Parameters
-        self.sigma_sq = nn.Parameter(torch.FloatTensor(1.0))
-        self.epsilon = nn.Parameter(torch.FloatTensor(0.0))
+        self.sigma_sq = nn.Parameter(torch.tensor(1.0))
+        self.epsilon = nn.Parameter(torch.tensor(0.0))
             
         # Neural Network
         self.layers =  nn.ModuleList(
@@ -169,6 +170,7 @@ class GCN(nn.Module):
         h: data for each layer (l * t, d_set + d_mask + ndim_v)
         D: distance matrix
         """
+        L = L.type(torch.float32)
         for layer in self.layers:
             h = layer(h, L)
         h = self.node_head(h)
@@ -193,8 +195,10 @@ class Constrainer(nn.Module):
             k1, k2 = torch.exp(ks[:, 0]), torch.exp(ks[:, 1]) 
             sigma = k1[:, np.newaxis]
             k2 = k2[:, np.newaxis]
-            xi = k2 - sigma / (maxis[batch, :, np.newaxis] + 1e6)
-            outs.append(torch.cat((xi, sigma), axis=1))
+            xi = k2 - sigma / (maxis[batch, :] + 1e6)
+            xi = xi.squeeze()
+            xi = xi[:, 0:1]
+            outs.append(torch.cat((xi, sigma), dim=1))
         return torch.stack(outs, dim=0)
     
 
@@ -254,8 +258,8 @@ class Combiner(nn.Module):
             set_out = torch.cat([set_out, mask], dim=1)             # (l*t, d_set + d_mask)
             cur_feat_dim = set_out.shape[1]
             set_out = set_out.reshape([bsize, l*t, cur_feat_dim])   # (l*t, d_set + d_mask)
-            set_out = sets.permute([0, 2, 1])
-            set_out = sets.reshape([bsize, ndim_s, l, t])           # (d_set + d_mask, l, t)
+            set_out = set_out.permute([0, 2, 1])
+            set_out = set_out.reshape([bsize, -1, l, t])           # (d_set + d_mask, l, t)
             
         # Concatenate vector predictors and set representations
         if sets is not None and vecs is not None:
@@ -269,12 +273,12 @@ class Combiner(nn.Module):
         L = self.graph_constructor(D)
             
         # Pass through GCN
-        out.reshape([bsize, -1, l*t])           # (d_set + d_mask + ndim_v, l * t)
-        out.permute([0, 2, 1])                  # (l * t, d_set + d_mask + ndim_v) 
-        out = self.gcn(out, L)                  # (l * t, d_set + d_mask + ndim_v) -> (l, 2)
+        out_3d = out.reshape([bsize, -1, l*t])           # (d_set + d_mask + ndim_v, l * t)
+        out_3d = out_3d.permute([0, 2, 1])                  # (l * t, d_set + d_mask + ndim_v) 
+        out = self.gcn(out_3d, L)                  # (l * t, d_set + d_mask + ndim_v) -> (l, 2)
 
         out_dim = out.shape[2]                      # 2 - error here maybe
-        out = out.reshape([bsize, out_dim, l*t])    # (2, l)
+        out = out.reshape([bsize, out_dim, l])    # (2, l)
         out = out.permute([0, 2, 1])                # (l, 2)
         
         # Constrain output
