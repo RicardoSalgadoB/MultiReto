@@ -143,17 +143,32 @@ def gpd_nll(xi, sigma, y, mask=None, xi_eps=1e-4, min_arg=1e-6):
     log f(y) = -log(sigma) - (1 + 1/xi) * log(1 + xi*y/sigma)    si xi != 0
     log f(y) = -log(sigma) - y/sigma                              si xi == 0
     
+    Notación:
+        B: número de batches
+        l: número de estaciones
+        t: número de intervalos de tiempo
+    
     Args:
         xi: Parámetro de forma, tensor (B, l).
         sigma: Parámetro de escala, tensor (B, l), debe ser > 0.
-        y: Excesos observados (B, l), con NaN donde no hubo exceso.
-        mask: Opcional (B, l). False = ignorar esa entrada.
+        y: Excesos observados (B, l, t), con NaN donde no hubo exceso.
+        mask: Opcional (B, l, t). False = ignorar esa entrada.
         xi_eps: Umbral para tratar xi como 0.
         min_arg: Valor mínimo del argumento del log.
  
     Returns:
         Tensor escalar con la NLL promedio sobre las entradas válidas
     """
+    if y.dim() == 2:    # Si la forma es (B, l) pasar a (B, l, 1)
+        y = y.unsqueeze(2)
+        if mask is not None:
+            mask = mask.unsqueeze(2)
+          
+    # Cambiar forma de parámetros para que sean congruentes con y  
+    if xi.dim() == y.dim() - 1:
+        xi = xi.unsqueeze(-1)
+        sigma = sigma.unsqueeze(-1)
+        
     valid = torch.isfinite(y) & (y >= 0)
     if mask is not None:
         valid = valid & mask.bool()
@@ -175,6 +190,14 @@ def gpd_nll(xi, sigma, y, mask=None, xi_eps=1e-4, min_arg=1e-6):
     return -(ll * valid).sum() / n
 
 
+xi = torch.FloatTensor([[0.5, 0.5, 0.5]])
+sigma = torch.FloatTensor([[1.5, 1.0, 0.75]])
+y = torch.FloatTensor([[4.5, 5, 6]])
+y2 = torch.FloatTensor([[
+    [3.0, 1.0],
+    [3.0, 1.0],
+    [3.0, 1.0]
+]])
 
 def forward(model: nn.Module, data: dict, D: torch.Tensor, with_metrics: bool = True):
     """Hace una pasada al modelo y calcula las 2 medidas de error.
