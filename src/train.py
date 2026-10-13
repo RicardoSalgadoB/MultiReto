@@ -232,24 +232,28 @@ def prepare_hourly_data(filename, pollutant, threshold):
 
 
 def main():
-    train_data_o3, test_data_o3, val_data_o3 = prepare_hourly_data('data/datos_imputados.csv', "O3", 38.0)
+    train_data, test_data, val_data = prepare_hourly_data('data/datos_imputados.csv', "O3", 38.0)
     
     # CREATE MODEL
-    model_o3 = Combiner(
+    model = Combiner(
         ds_params = params_dict["ds_params"],
         gcn_params = params_dict["gcn_params"],
         graph_params = params_dict["graph_params"],
     )
     
+    # TRAIN THE MODEL
     train_config = TrainConfig()
     
     training_loop(
-        model = model_o3, 
-        train_data = train_data_o3, 
-        val_data = test_data_o3, 
+        model = model, 
+        train_data = train_data,
+        val_data = test_data, 
         D = haversine_matrix(STATION_COORDS), 
         config = train_config
     )
+    
+    # SAVE THE MODEL
+    torch.save(model.state_dict(), "Models/model_o3.pth")
 
 
 if __name__ == "__main__":

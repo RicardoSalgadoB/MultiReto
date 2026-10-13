@@ -173,6 +173,7 @@ class GCN(nn.Module):
         L = L.type(torch.float32)
         for layer in self.layers:
             h = layer(h, L)
+        # print(h.reshape(730, 15, 24, 32)[:2, 10, :5, :5])
         h = self.node_head(h)
         h = self.readout(h.transpose(-1, -2)).transpose(-1, -2)
         return h
@@ -195,7 +196,7 @@ class Constrainer(nn.Module):
             k1, k2 = torch.exp(ks[:, 0]), torch.exp(ks[:, 1]) 
             sigma = k1[:, np.newaxis]
             k2 = k2[:, np.newaxis]
-            xi = k2 - sigma / (maxis[batch, :] + 1e6)
+            xi = k2 - sigma / (maxis[batch, :] + 1e-6)
             xi = xi.squeeze()
             xi = xi[:, 0:1]
             outs.append(torch.cat((xi, sigma), dim=1))
@@ -248,6 +249,8 @@ class Combiner(nn.Module):
         else:
             bsize, ndim_s, l, t = sets.shape   # Shape: (ndim_s, l, t) - ndim_s = 1
             
+        # print(vecs[:2, :, 10, :5])
+            
         # Compute set representations
         if sets is not None:
             ndim_s = sets.shape[1]
@@ -273,13 +276,11 @@ class Combiner(nn.Module):
         L = self.graph_constructor(D)
             
         # Pass through GCN
+        # print(out[:2, :, 10, :5])
         out_3d = out.reshape([bsize, -1, l*t])           # (d_set + d_mask + ndim_v, l * t)
         out_3d = out_3d.permute([0, 2, 1])                  # (l * t, d_set + d_mask + ndim_v) 
         out = self.gcn(out_3d, L)                  # (l * t, d_set + d_mask + ndim_v) -> (l, 2)
-
-        out_dim = out.shape[2]                      # 2 - error here maybe
-        out = out.reshape([bsize, out_dim, l])    # (2, l)
-        out = out.permute([0, 2, 1])                # (l, 2)
+        # print(out[:2, 10, :])
         
         # Constrain output
         final_out = self.constrainer(out[:, :, :], maxis=maxis) # (l, 2)

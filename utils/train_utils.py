@@ -191,14 +191,6 @@ def gpd_nll(xi, sigma, y, mask=None, xi_eps=1e-4, min_arg=1e-6):
     return -(ll * valid).sum() / n
 
 
-xi = torch.FloatTensor([[0.5, 0.5, 0.5]])
-sigma = torch.FloatTensor([[1.5, 1.0, 0.75]])
-y = torch.FloatTensor([[4.5, 5, 6]])
-y2 = torch.FloatTensor([[
-    [3.0, 1.0],
-    [3.0, 1.0],
-    [3.0, 1.0]
-]])
 
 def forward(model: nn.Module, data: dict, D: torch.Tensor, with_metrics: bool = True):
     """Hace una pasada al modelo y calcula las 2 medidas de error.
@@ -332,7 +324,6 @@ def training_loop(model: nn.Module, train_data: dict, val_data: Optional[dict],
         "val_xi_mean", "val_sigma_mean") y "best_val_nll". Sirve para graficar las curvas
     """
     set_seed(config.seed)
-    torch.autograd.set_detect_anomaly(True)
     device = torch.device(config.device)
     model.to(device)
     D = D.to(device)

@@ -11,3 +11,4 @@ output/
 *.Rproj
 
 /.quarto/
+*/__pycache__
