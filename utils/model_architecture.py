@@ -4,6 +4,7 @@ import torch
 from torch import nn
 
 from utils.haversine_distance import compute_adj_matrix
+from utils.graph_constructor import Oceanus
 
 class DeepSet(nn.Module):
     """Implementation of Deep Set.
@@ -27,7 +28,7 @@ class DeepSet(nn.Module):
         self.sodim = sodim
         self.odim = odim
         self.nlayers = nlayers
-        self.snlayers = nlayers
+        self.snlayers = snlayers
         
         # Middle layers of element processor
         elm_mids = list(itertools.chain(
@@ -112,7 +113,8 @@ class GCNLayer(nn.Module):
         
     def forward(self, h, L):        # N: Num. nodes / M: Num. features
         h = h @ self.weight         # Shapes: (N, M_in) @ (M_in, M_out) -> (N, M_out)
-        h = torch.sparse.mm(L, h)   # (N, N) @ (N, M_out) -> (N, M_out)
+        L = L.unsqueeze(0)
+        h = L @ h   # (N, N) @ (N, M_out) -> (N, M_out)
         if self.bias is not None:
             h += self.bias          # (N, M_out) + (N, N)@(1, M_out) -> (N, M_out)
         return self.activation(h)
@@ -145,8 +147,8 @@ class GCN(nn.Module):
             hidden_dim = in_features
             
         # Graph Construction Parameters
-        self.sigma_sq = nn.Parameter(torch.FloatTensor(1.0))
-        self.epsilon = nn.Parameter(torch.FloatTensor(0.0))
+        self.sigma_sq = nn.Parameter(torch.tensor(1.0))
+        self.epsilon = nn.Parameter(torch.tensor(0.0))
             
         # Neural Network
         self.layers =  nn.ModuleList(
@@ -163,32 +165,15 @@ class GCN(nn.Module):
         self.out_features = in_features
         
         
-    def get_normalized_laplacian_matrix(self, D: torch.Tensor):
-        # Adjacency Matrix
-        A = torch.exp( -D**2 / self.sigma_sq )
-        mask = A <= self.epsilon
-        A[mask] = 0.0
-        
-        # Laplacian matrix
-        degree_vector = torch.sum(A, dim=1)
-        D = torch.diag(degree_vector)
-        L = D - A
-        
-        # Normalization
-        zeta_max = torch.max(torch.linalg.eigvalsh(L))
-        I_N = torch.eye(L.shape[0])
-        
-        return 2*L / zeta_max - I_N
-        
-        
-    def forward(self, h: torch.Tensor, D: torch.Tensor):
+    def forward(self, h: torch.Tensor, L: torch.Tensor):
         """
         h: data for each layer (l * t, d_set + d_mask + ndim_v)
         D: distance matrix
         """
-        L = self.get_normalized_laplacian_matrix(D)
+        L = L.type(torch.float32)
         for layer in self.layers:
             h = layer(h, L)
+        # print(h.reshape(730, 15, 24, 32)[:2, 10, :5, :5])
         h = self.node_head(h)
         h = self.readout(h.transpose(-1, -2)).transpose(-1, -2)
         return h
@@ -211,8 +196,10 @@ class Constrainer(nn.Module):
             k1, k2 = torch.exp(ks[:, 0]), torch.exp(ks[:, 1]) 
             sigma = k1[:, np.newaxis]
             k2 = k2[:, np.newaxis]
-            xi = k2 - sigma / (maxis[batch, :, np.newaxis] + 1e6)
-            outs.append(torch.cat((xi, sigma), axis=1))
+            xi = k2 - sigma / (maxis[batch, :] + 1e-6)
+            xi = xi.squeeze()
+            xi = xi[:, 0:1]
+            outs.append(torch.cat((xi, sigma), dim=1))
         return torch.stack(outs, dim=0)
     
 
@@ -222,12 +209,15 @@ class Combiner(nn.Module):
     
     Academically borrowed from Wilson et al. (2022) (https://github.com/TylerPWilson/deepGPD/blob/main/model.py).
     """
-    def __init__(self, ds_params: dict, gcn_params: dict) -> None:
+    def __init__(self, graph_params: dict, ds_params: dict, gcn_params: dict) -> None:
         """
         ds_params (dict): Parameters for the DeepSet Network
         gcn_params (dict): Parameters for the Graph Convolutional Neural Network
         """
         super().__init__()
+        
+        # Create Graph Constructor
+        self.graph_constructor = Oceanus(**graph_params)
 
         # Create GCN
         self.gcn = GCN(**gcn_params)
@@ -259,6 +249,8 @@ class Combiner(nn.Module):
         else:
             bsize, ndim_s, l, t = sets.shape   # Shape: (ndim_s, l, t) - ndim_s = 1
             
+        # print(vecs[:2, :, 10, :5])
+            
         # Compute set representations
         if sets is not None:
             ndim_s = sets.shape[1]
@@ -269,8 +261,8 @@ class Combiner(nn.Module):
             set_out = torch.cat([set_out, mask], dim=1)             # (l*t, d_set + d_mask)
             cur_feat_dim = set_out.shape[1]
             set_out = set_out.reshape([bsize, l*t, cur_feat_dim])   # (l*t, d_set + d_mask)
-            set_out = sets.permute([0, 2, 1])
-            set_out = sets.reshape([bsize, ndim_s, l, t])           # (d_set + d_mask, l, t)
+            set_out = set_out.permute([0, 2, 1])
+            set_out = set_out.reshape([bsize, -1, l, t])           # (d_set + d_mask, l, t)
             
         # Concatenate vector predictors and set representations
         if sets is not None and vecs is not None:
@@ -280,14 +272,15 @@ class Combiner(nn.Module):
         else:
             out = sets
             
+        # Construct graph
+        L = self.graph_constructor(D)
+            
         # Pass through GCN
-        out.reshape([bsize, -1, l*t])           # (d_set + d_mask + ndim_v, l * t)
-        out.permute([0, 2, 1])                  # (l * t, d_set + d_mask + ndim_v) 
-        out = self.gcn(out, D)                  # (l * t, d_set + d_mask + ndim_v) -> (l, 2)
-
-        out_dim = out.shape[2]                      # 2 - error here maybe
-        out = out.reshape([bsize, out_dim, l*t])    # (2, l)
-        out = out.permute([0, 2, 1])                # (l, 2)
+        # print(out[:2, :, 10, :5])
+        out_3d = out.reshape([bsize, -1, l*t])           # (d_set + d_mask + ndim_v, l * t)
+        out_3d = out_3d.permute([0, 2, 1])                  # (l * t, d_set + d_mask + ndim_v) 
+        out = self.gcn(out_3d, L)                  # (l * t, d_set + d_mask + ndim_v) -> (l, 2)
+        # print(out[:2, 10, :])
         
         # Constrain output
         final_out = self.constrainer(out[:, :, :], maxis=maxis) # (l, 2)
