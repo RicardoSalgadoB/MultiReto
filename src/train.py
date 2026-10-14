@@ -2,6 +2,7 @@ import sys
 import numpy as np
 import pandas as pd
 import torch
+import pickle
 
 from pathlib import Path
 from sklearn.preprocessing import StandardScaler
@@ -35,22 +36,24 @@ U_THRESHOLDS = {
 }
 
 STATION_COORDS = torch.tensor([
-    [25.665278, -100.243611],  # 1
-    [25.744722, -100.253056],  # 2
-    [25.675833, -100.338333],  # 3
-    [25.762778, -100.369167],  # 4
-    [25.675556, -100.458056],  # 5
-    [25.800278, -100.584444],  # 6
-    [25.798611, -100.327222],  # 7
-    [25.777222, -100.188056],  # 8
-    [25.645833, -100.095278],  # 9
-    [25.665000, -100.412778],  # 10
-    [25.601111,  -99.999167],  # 11
-    [25.616944, -100.273889],  # 12
-    [25.729722, -100.310000],  # 13
-    [25.790556, -100.078333],  # 14
-    [25.768333, -100.463611],  # 15
+    [25.675833, -100.338333],  # CE
+    [25.744722, -100.253056],  # NE
+    [25.777222, -100.188056],  # NE2
+    [25.790556, -100.078333],  # NE3
+    [25.762778, -100.369167],  # NO
+    [25.800278, -100.584444],  # NO2
+    [25.768333, -100.463611],  # NO3
+    [25.798611, -100.327222],  # NTE
+    [25.729722, -100.310000],  # NTE2
+    [25.665278, -100.243611],  # SE
+    [25.645833, -100.095278],  # SE2
+    [25.601111,  -99.999167],  # SE3
+    [25.675556, -100.458056],  # SO
+    [25.665000, -100.412778],  # SO2
+    [25.616944, -100.273889],  # SUR
 ], dtype=torch.float64)
+
+NUM_VEC_FEATURES = 17
 
 
 def augment_w_resonances(df):
@@ -58,7 +61,7 @@ def augment_w_resonances(df):
     return df
 
 
-def get_data(filename, standardize=True):
+def get_data(filename):
     df = pd.read_csv(filename)
         
     # Filter to et all data after 2023
@@ -68,12 +71,21 @@ def get_data(filename, standardize=True):
     
     # Split datetime column
     df_filtered["Hora"] = df_filtered["Fecha y hora"].dt.hour
+    df_filtered["Dia"] = df_filtered["Fecha y hora"].dt.day
     df_filtered["Anio"] = df_filtered["Fecha y hora"].dt.year - 2023
     df_filtered["Mes"] = df_filtered["Fecha y hora"].dt.month
     
     return df_filtered
+
+
+def catalog_excesses(df, pollutant, u_threshold):
+    df["excess"] = df[pollutant] - u_threshold
+    condition = (df["excess"] > 0)
+    df["excess"] = df["excess"].where(condition)
+    return df
+
     
-def split_train_test(df, pollutant, u_threshold, standardize=True):
+def split_train_test(df, standardize=True, scaler=None):
     # Split train & test 
     df_val = df[
         "2026-01-01 00:00:00" <= df["Fecha y hora"]
@@ -88,11 +100,15 @@ def split_train_test(df, pollutant, u_threshold, standardize=True):
     
     # Standardize
     if standardize:
-        scaler = StandardScaler()
+        save_scaler = False
+        if scaler is None:
+            save_scaler = True
+            scaler = StandardScaler()
+            
         numerical_features = [
             'CO', 'NO', 'NO2', 'NOX', 'O3', 'PM10',
             'PM2.5', 'PRS', 'RAINF', 'RH', 'SO2', 'SR', 'TOUT', 'WSR', 'WDR',
-            'Hora', 'Anio', 'Mes'
+            'Hora', 'Mes', 'excess'
         ]
         augmented_features = []
         features = numerical_features + augmented_features
@@ -101,26 +117,17 @@ def split_train_test(df, pollutant, u_threshold, standardize=True):
         df_test[features] = scaler.transform(df_test[features])
         df_val[features] = scaler.transform(df_val[features])
         
-        means = dict(zip(scaler.feature_names_in_, scaler.mean_))
-        stds = dict(zip(scaler.feature_names_in_, scaler.scale_))
-        
-        u_threshold = (u_threshold - means[pollutant]) / stds[pollutant]
+        if save_scaler:
+            with open("models/scaler.pkl", "wb") as outfile:
+                pickle.dump(scaler, outfile)
+                
         
     # Get excess dataframes
-    hourly_pollutants = [pollutant]
-    indexes = ["Estacion", "Fecha y hora"]
-    target_cols = hourly_pollutants + indexes
-    condition_train = (df_train[pollutant] > u_threshold)
-    condition_test = (df_test[pollutant] > u_threshold)
-    condition_val = (df_val[pollutant] > u_threshold)
+    target_cols = ["Estacion", "Fecha y hora", "excess"]
     
     df_train_ex = df_train[target_cols].copy()
     df_test_ex = df_test[target_cols].copy()
     df_val_ex = df_val[target_cols].copy()
-    
-    df_train_ex[pollutant] = df_train[pollutant].where(condition_train)
-    df_test_ex[pollutant] = df_test[pollutant].where(condition_test)
-    df_val_ex[pollutant] = df_val[pollutant].where(condition_val)
     
     return df_train, df_train_ex, df_test, df_test_ex, df_val, df_val_ex
 
@@ -135,13 +142,13 @@ def rearrange_data(df):
         values=[
             'CO', 'NO', 'NO2', 'NOX', 'O3', 'PM10',
             'PM2.5', 'PRS', 'RAINF', 'RH', 'SO2', 'SR', 'TOUT', 'WSR', 'WDR',
-            'Hora', 'Anio', 'Mes'
+            'Hora', 'Mes'
         ]
     )
     
     num_intervals = df_pivoted.index.nunique()
     num_stations = df_pivoted.columns.levels[1].nunique()
-    num_features = 18
+    num_features = NUM_VEC_FEATURES
     
     array = df_pivoted.to_numpy().reshape(num_intervals, num_features, num_stations)
     array = np.moveaxis(array, 1, 0)
@@ -157,7 +164,7 @@ def rearrange_excesses(df, pollutant):
     df_pivoted = df.pivot(
         index="Fecha y hora", 
         columns="Estacion",
-        values=pollutant
+        values="excess"
     )
     
     num_intervals = df_pivoted.index.nunique()
@@ -175,11 +182,11 @@ def make_dict(data, excesses):
     The tensors returned in the dataset have the following shapes:
     (days/batches, num_features, num_stations, hours)
     """
-    data = data.reshape([18, 15, 24, -1])
-    excesses = excesses.reshape([1, 15, 24, -1])
+    data = data.reshape(NUM_VEC_FEATURES, 15, -1, 24)
+    excesses = excesses.reshape(1, 15, -1, 24)
 
-    data = data.permute([3, 0, 1, 2])
-    excesses = excesses.permute([3, 0, 1, 2])
+    data = data.permute([2, 0, 1, 3])
+    excesses = excesses.permute([2, 0, 1, 3])
     
     dict = {
         "vecs": data[:-1, :, :, :],
@@ -195,9 +202,12 @@ def make_dict(data, excesses):
 
 def prepare_hourly_data(filename, pollutant, threshold):
     # 1) GET THE DATA
-    df = get_data(filename, False)
+    df = get_data(filename)
     df = augment_w_resonances(df)
-    df_train, df_train_ex, df_test, df_test_ex, df_val, df_val_ex = split_train_test(df, pollutant, threshold, False)
+    df = catalog_excesses(df, pollutant, threshold)
+    df_train, df_train_ex, df_test, df_test_ex, df_val, df_val_ex = split_train_test(
+        df, standardize=True, scaler=None
+    )
     
     # 2) REARRANGE THE DATA & TURN IT INTO ARRAYS
     train_arr = rearrange_data(df_train)
@@ -232,7 +242,13 @@ def prepare_hourly_data(filename, pollutant, threshold):
 
 
 def main():
-    train_data, test_data, val_data = prepare_hourly_data('data/datos_imputados.csv', "O3", 38.0)
+    pollutant = "SO2"
+    extra = "_hourly"
+    train_data, test_data, val_data = prepare_hourly_data(
+        filename='data/datos_imputados.csv', 
+        pollutant=pollutant, 
+        threshold=U_THRESHOLDS[pollutant]
+    )
     
     # CREATE MODEL
     model = Combiner(
@@ -242,7 +258,7 @@ def main():
     )
     
     # TRAIN THE MODEL
-    train_config = TrainConfig()
+    train_config = TrainConfig(use_early_stopping=False)
     
     training_loop(
         model = model, 
@@ -253,7 +269,7 @@ def main():
     )
     
     # SAVE THE MODEL
-    torch.save(model.state_dict(), "Models/model_o3.pth")
+    torch.save(model.state_dict(), f"Models/model_{pollutant}{extra}.pth")
 
 
 if __name__ == "__main__":

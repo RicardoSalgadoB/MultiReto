@@ -7,7 +7,6 @@ class NormalizedLaplacianMatrixGenerator(nn.Module):
         
         # Graph Construction Parameters
         self.num_hours = num_hours
-        self.sigma_sq = nn.Parameter(torch.tensor(1.0))
         self.epsilon = nn.Parameter(torch.tensor(0.0))
         
     def compute_big_matrix(self, A_small) -> torch.Tensor:
@@ -15,9 +14,10 @@ class NormalizedLaplacianMatrixGenerator(nn.Module):
                 
     def forward(self, D: torch.Tensor):
         # Adjacency Matrix
-        A_small = torch.exp( -D**2 / self.sigma_sq )
+        sigma_sq = torch.median( D**2 )
+        A_small = torch.exp( -D**2 / sigma_sq )
         mask = A_small <= self.epsilon
-        A_small.masked_fill(mask, 0.0)
+        A_small = A_small.masked_fill(mask, 0.0)
         
         # Compute big matrix
         A = self.compute_big_matrix(A_small) 
@@ -48,14 +48,15 @@ class Oceanus(NormalizedLaplacianMatrixGenerator):
         
         # Main diagonal
         I_N = torch.eye(N, device=device, dtype=dtype)
-        diag_blocks = torch.kron(I_N, A_small)
+        I_d = torch.eye(d, device=device, dtype=dtype)
+        diag_blocks = torch.kron(A_small, I_N)
         
         # Off-diagonal
         off_diag_mask = (
             torch.diag(torch.ones(N-1, device=device, dtype=dtype), diagonal=1)
           + torch.diag(torch.ones(N-1, device=device, dtype=dtype), diagonal=-1)
         )
-        off_diag_blocks = torch.kron(off_diag_mask, torch.eye(d, device=device, dtype=dtype))
+        off_diag_blocks = torch.kron(I_d, off_diag_mask)
         
         # Combine and return
         return diag_blocks + off_diag_blocks
@@ -75,14 +76,14 @@ class Coeus(NormalizedLaplacianMatrixGenerator):
         
         # Main diagonal
         I_N = torch.eye(N, device=device, dtype=dtype)
-        diag_blocks = torch.kron(I_N, A_small)
+        diag_blocks = torch.kron(A_small, I_N)
         
         # Off-diagonal
         off_diag_mask = (
             torch.diag(torch.ones(N-1, device=device, dtype=dtype), diagonal=1)
             + torch.diag(torch.ones(N-1, device=device, dtype=dtype), diagonal=-1)
         )
-        off_diag_blocks = torch.kron(off_diag_mask, A_small)
+        off_diag_blocks = torch.kron(A_small, off_diag_mask)
         
         # Combine and return
         return diag_blocks + off_diag_blocks
@@ -103,14 +104,14 @@ class Crius(NormalizedLaplacianMatrixGenerator):
         
         # Main diagonal
         I_N = torch.eye(N, device=device, dtype=dtype)
-        diag_blocks = torch.kron(I_N, A_small)
+        diag_blocks = torch.kron(A_small, I_N)
         
         # Off-diagonal
         off_diag_mask = (
             torch.diag(torch.ones(N-1, device=device, dtype=dtype), diagonal=1)
             + torch.diag(torch.ones(N-1, device=device, dtype=dtype), diagonal=-1)
         )
-        off_diag_blocks = torch.kron(off_diag_mask, A_small*self.weight)
+        off_diag_blocks = torch.kron(A_small*self.weight, off_diag_mask)
         
         # Combine and return
         return diag_blocks + off_diag_blocks
@@ -130,7 +131,7 @@ class Hyperion(NormalizedLaplacianMatrixGenerator):
         
         # Main diagonal
         I_N = torch.eye(N, device=device, dtype=dtype)
-        return torch.kron(I_N, A_small)
+        return torch.kron(A_small, I_N)
     
     
 class Iapetus(NormalizedLaplacianMatrixGenerator):
@@ -148,10 +149,10 @@ class Iapetus(NormalizedLaplacianMatrixGenerator):
         
         # Main diagonal
         I_N = torch.eye(N, device=device, dtype=dtype)
-        big_matrix = torch.kron(I_N, A_small)
+        big_matrix = torch.kron(A_small, I_N)
         
         # Affect random connections
         mask = (torch.rand_like(big_matrix) < self.p)
         alterations = (2*torch.rand_like(big_matrix) - 1)/2
-        big_matrix = torch.clamp(big_matrix[mask]+alterations[mask], min=0.0, max=1.0)
+        big_matrix = torch.clamp(big_matrix+alterations.where(mask, 0.0), min=0.0, max=1.0)
         return big_matrix

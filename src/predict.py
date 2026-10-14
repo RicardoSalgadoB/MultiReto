@@ -21,27 +21,36 @@ except ModuleNotFoundError:
     
 
 STATION_NAMES = [
-    "SE",
-    "NE",
     "CE",
-    "CO",
-    "SO",
-    "NO2",
-    "NTE",
+    "NE",
     "NE2",
-    "SE2",
-    "S02",
-    "SE3",
-    "SUR",
-    "NTE2",
     "NE3",
+    "NO",
+    "NO2",
     "NO3",
+    "NTE",
+    "NTE2",
+    "SE",
+    "SE2",
+    "SE3",
+    "SO",
+    "SO2",
+    "SUR",
 ]
+
+U_THRESHOLDS = {
+    "PM2.5": 38.0,
+    "O3": 63.0,
+    "SO2": 20.2
+}
 
     
 def main():
+    pollutant = "SO2"
+    extra = "_hourly"
     # LOAD DATA
-    train_data_so2_hourly, test_data_so2_hourly, val_data_so2_hourly = prepare_hourly_data('data/datos_imputados.csv', "SO2", 20.2)
+    train_data_so2_hourly, test_data_so2_hourly, val_data_so2_hourly = prepare_hourly_data(
+        'data/datos_imputados.csv', pollutant, U_THRESHOLDS[pollutant])
     
     # LOAD MODEL
     model_so2_hourly = Combiner(
@@ -49,7 +58,7 @@ def main():
         gcn_params = params_dict["gcn_params"],
         graph_params = params_dict["graph_params"],
     )
-    model_so2_hourly.load_state_dict(torch.load("models/model_o3.pth", map_location="cpu"))
+    model_so2_hourly.load_state_dict(torch.load(f"models/model_{pollutant}{extra}.pth", map_location="cpu"))
     
     # DISTANCES
     D = haversine_matrix(STATION_COORDS)
@@ -75,7 +84,7 @@ def main():
         {i: STATION_NAMES[i] for i in range(len(STATION_NAMES))}
     )
     
-    df.to_csv("data/predictions_o3.csv", index=False)
+    df.to_csv(f"data/predictions_{pollutant}{extra}.csv", index=False)
     
     
 if __name__ == '__main__':

@@ -99,7 +99,7 @@ class GCNLayer(nn.Module):
         else:
             self.bias = None
             self.register_parameter('bias', None)
-        self.activation = nn.Sigmoid()
+        self.activation = nn.ReLU()
         
         # Initialize weights    
         self.initialize_weights()
@@ -146,10 +146,6 @@ class GCN(nn.Module):
         if hidden_dim is None:
             hidden_dim = in_features
             
-        # Graph Construction Parameters
-        self.sigma_sq = nn.Parameter(torch.tensor(1.0))
-        self.epsilon = nn.Parameter(torch.tensor(0.0))
-            
         # Neural Network
         self.layers =  nn.ModuleList(
             [GCNLayer(in_features, hidden_dim, bias=use_bias)]
@@ -157,12 +153,12 @@ class GCN(nn.Module):
         )
         self.node_head = nn.Sequential(
             nn.Linear(hidden_dim, out_features, bias=False),
-            nn.Sigmoid(),
+            nn.ReLU(),
         )
         self.readout = nn.Linear(num_nodes, n_outputs)
         self.in_features = in_features
         self.hidden_dim = hidden_dim
-        self.out_features = in_features
+        self.out_features = out_features
         
         
     def forward(self, h: torch.Tensor, L: torch.Tensor):
@@ -173,7 +169,6 @@ class GCN(nn.Module):
         L = L.type(torch.float32)
         for layer in self.layers:
             h = layer(h, L)
-        # print(h.reshape(730, 15, 24, 32)[:2, 10, :5, :5])
         h = self.node_head(h)
         h = self.readout(h.transpose(-1, -2)).transpose(-1, -2)
         return h
@@ -188,20 +183,16 @@ class Constrainer(nn.Module):
     def __init__(self) -> None:
         super().__init__()
         
-    def forward(self, all_ks, maxis=None):      # All ks shape: (l*t, 2)
-        # Could be vectorized
-        outs = list()
-        for batch in range(all_ks.shape[0]):
-            ks = all_ks[batch, : , :]                               # (l*t, 2)
-            k1, k2 = torch.exp(ks[:, 0]), torch.exp(ks[:, 1]) 
-            sigma = k1[:, np.newaxis]
-            k2 = k2[:, np.newaxis]
-            xi = k2 - sigma / (maxis[batch, :] + 1e-6)
-            xi = xi.squeeze()
-            xi = xi[:, 0:1]
-            outs.append(torch.cat((xi, sigma), dim=1))
-        return torch.stack(outs, dim=0)
-    
+    def forward(self, all_ks, maxis=None):      # All ks shape: (B, L, 2)
+        k = torch.exp(all_ks)                   # (B, L, 2)
+        sigma, k2 = k[..., 0:1], k[..., 1:2]    # each (B, L, 1)
+
+        m = maxis[0]
+        xi = k2 - sigma / (m + 1e-6)        # (B, B, L, M)
+        xi = xi.mean(dim=-1, keepdim=True)      # (B, L, 1)
+
+        return torch.cat((xi, sigma), dim=-1)   # (B, L, 2)
+
 
 class Combiner(nn.Module):
     """Graph Convolutional Neural Network for predicting GPD distributions parameters for each node/station.
