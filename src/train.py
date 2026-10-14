@@ -108,8 +108,8 @@ def split_train_test(df, standardize=True, scaler=None):
         numerical_features = [
             'CO', 'NO', 'NO2', 'NOX', 'O3', 'PM10',
             'PM2.5', 'PRS', 'RAINF', 'RH', 'SO2', 'SR', 'TOUT', 'WSR', 'WDR',
-            'Hora', 'Mes', 'excess'
-        ]
+            'Hora', 'Mes'
+        ]   # 'excess' NO se estandariza: la GPD vive en las unidades originales del exceso (Y - u >= 0)
         augmented_features = []
         features = numerical_features + augmented_features
 
@@ -241,8 +241,10 @@ def prepare_hourly_data(filename, pollutant, threshold):
     return train_data, test_data, val_data
 
 
-def main():
-    pollutant = "SO2"
+def main(pollutant=None):
+    """Entrena el modelo de un contaminante: `python src/train.py O3` (por defecto SO2)."""
+    if pollutant is None:
+        pollutant = sys.argv[1] if len(sys.argv) > 1 else "SO2"
     extra = "_hourly"
     train_data, test_data, val_data = prepare_hourly_data(
         filename='data/datos_imputados.csv', 
@@ -256,9 +258,11 @@ def main():
         gcn_params = params_dict["gcn_params"],
         graph_params = params_dict["graph_params"],
     )
+    # Arranca sigma ~ media de los excesos de train y normaliza los excesos de entrada al DeepSet
+    model.init_from_train_data(train_data)
     
-    # TRAIN THE MODEL
-    train_config = TrainConfig(use_early_stopping=False)
+    # TRAIN THE MODEL (TrainConfig usa "cuda" si hay GPU disponible)
+    train_config = TrainConfig()
     
     training_loop(
         model = model, 
@@ -269,7 +273,8 @@ def main():
     )
     
     # SAVE THE MODEL
-    torch.save(model.state_dict(), f"Models/model_{pollutant}{extra}.pth")
+    Path("models").mkdir(exist_ok=True)
+    torch.save(model.state_dict(), f"models/model_{pollutant}{extra}.pth")
 
 
 if __name__ == "__main__":

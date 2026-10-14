@@ -45,9 +45,12 @@ U_THRESHOLDS = {
 }
 
     
-def main():
-    pollutant = "SO2"
+def main(pollutant=None):
+    """Genera (xi, sigma) por dia y estacion: `python src/predict.py O3` (por defecto SO2)."""
+    if pollutant is None:
+        pollutant = sys.argv[1] if len(sys.argv) > 1 else "SO2"
     extra = "_hourly"
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     # LOAD DATA
     train_data_so2_hourly, test_data_so2_hourly, val_data_so2_hourly = prepare_hourly_data(
         'data/datos_imputados.csv', pollutant, U_THRESHOLDS[pollutant])
@@ -64,7 +67,7 @@ def main():
     D = haversine_matrix(STATION_COORDS)
     
     # PREDICT
-    predictions_so2_hourly = predict(model_so2_hourly, train_data_so2_hourly, D)
+    predictions_so2_hourly = predict(model_so2_hourly, train_data_so2_hourly, D, device=device)
     
     # SAVE PREDICTIONS
     dates = pd.date_range(

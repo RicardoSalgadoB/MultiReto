@@ -36,4 +36,4 @@ def gp_penalized(raw_samples, xi, sigma):
     
     log_thing[(~mask) & (~nan_mask)] = 1e-6
     out = np.log(sigma) + ( 1 + 1/xi) * np.log(log_thing)
-    return np.nanmean(out[~nan_mask]), np.sum( (~mask) & (~nan_mask) ) / np.sum(nan_mask)
+    return np.nanmean(out[~nan_mask]), np.sum( (~mask) & (~nan_mask) ) / np.sum(~nan_mask)   # fraccion sobre las muestras VALIDAS
