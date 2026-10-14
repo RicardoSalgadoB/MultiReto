@@ -1,7 +1,9 @@
 import itertools
+import math
 import numpy as np
 import torch
 from torch import nn
+import torch.nn.functional as F
 
 from utils.haversine_distance import compute_adj_matrix
 from utils.graph_constructor import Oceanus
@@ -99,7 +101,11 @@ class GCNLayer(nn.Module):
         else:
             self.bias = None
             self.register_parameter('bias', None)
-        self.activation = nn.ReLU()
+        # ELU (como en deepGPD) en lugar de ReLU: no se "mueren" las neuronas.
+        self.activation = nn.ELU()
+        # Conexion residual cuando las dimensiones coinciden (como en deepGPD): evita que la
+        # señal se desvanezca al apilar muchas capas
+        self.residual = (in_features == out_features)
         
         # Initialize weights    
         self.initialize_weights()
@@ -111,13 +117,16 @@ class GCNLayer(nn.Module):
             nn.init.zeros_(self.bias)
         
         
-    def forward(self, h, L):        # N: Num. nodes / M: Num. features
-        h = h @ self.weight         # Shapes: (N, M_in) @ (M_in, M_out) -> (N, M_out)
+    def forward(self, h_in, L):     # N: Num. nodes / M: Num. features
+        h = h_in @ self.weight      # Shapes: (N, M_in) @ (M_in, M_out) -> (N, M_out)
         L = L.unsqueeze(0)
         h = L @ h   # (N, N) @ (N, M_out) -> (N, M_out)
         if self.bias is not None:
-            h += self.bias          # (N, M_out) + (N, N)@(1, M_out) -> (N, M_out)
-        return self.activation(h)
+            h = h + self.bias       # (N, M_out) + (N, N)@(1, M_out) -> (N, M_out)
+        h = self.activation(h)
+        if self.residual:
+            h = h + h_in
+        return h
         
     
 class GCN(nn.Module):
@@ -151,11 +160,15 @@ class GCN(nn.Module):
             [GCNLayer(in_features, hidden_dim, bias=use_bias)]
           + [GCNLayer(hidden_dim, hidden_dim, bias=use_bias) for i in range(nlayers)]
         )
+        # Cabeza LINEAL (sin activacion), igual que la ultima capa del CNN de deepGPD: una ReLU
+        # aqui deja las salidas k1,k2 >= 0 y puede "matar" la red.
         self.node_head = nn.Sequential(
             nn.Linear(hidden_dim, out_features, bias=False),
-            nn.ReLU(),
         )
         self.readout = nn.Linear(num_nodes, n_outputs)
+        # Sesgo por canal (k1 = log sigma, k2). El `readout` comparte su sesgo entre los 2 canales,
+        # asi que este permite arrancar cada parametro en una escala razonable (ver Combiner.init_from_train_data)
+        self.out_bias = nn.Parameter(torch.zeros(out_features))
         self.in_features = in_features
         self.hidden_dim = hidden_dim
         self.out_features = out_features
@@ -171,7 +184,7 @@ class GCN(nn.Module):
             h = layer(h, L)
         h = self.node_head(h)
         h = self.readout(h.transpose(-1, -2)).transpose(-1, -2)
-        return h
+        return h + self.out_bias
 
 
 class Constrainer(nn.Module):
@@ -179,17 +192,33 @@ class Constrainer(nn.Module):
     This implement the EXTREME VALUE MODELING MODULE.
     
     Academically borrowed from Wilson et al. (2022) (https://github.com/TylerPWilson/deepGPD/blob/main/model.py).
+
+    sigma = exp(k1),  xi = exp(k2) - sigma / max_estacion   (deepGPD)
+
+    Diferencias respecto a deepGPD, necesarias para que el entrenamiento no diverja:
+      - k1 y k2 se acotan con tanh: exp() sin tope llegaba a 1e19 e inf/NaN.
+      - xi se mantiene por encima de `xi_floor` (-1) con una softplus: para xi < -1 la
+        verosimilitud GPD no esta acotada y la perdida "mejora" sin que el modelo sea bueno.
+        La softplus solo SUBE xi, asi que 1 + xi*y/sigma > 0 se sigue cumpliendo.
+      - `maxis` es un escalar por estacion (maximo de los excesos de entrenamiento, como en
+        deepGPD), no un promedio de 1/max por hora.
     """
-    def __init__(self) -> None:
+    def __init__(self, sigma_bound=7.0, xi_bound=2.0, xi_floor=-1.0, beta=20.0) -> None:
         super().__init__()
+        self.sigma_bound = sigma_bound
+        self.xi_bound = xi_bound
+        self.xi_floor = xi_floor
+        self.beta = beta
         
     def forward(self, all_ks, maxis=None):      # All ks shape: (B, L, 2)
-        k = torch.exp(all_ks)                   # (B, L, 2)
-        sigma, k2 = k[..., 0:1], k[..., 1:2]    # each (B, L, 1)
+        k1 = self.sigma_bound * torch.tanh(all_ks[..., 0:1] / self.sigma_bound)   # (B, L, 1)
+        k2 = self.xi_bound * torch.tanh(all_ks[..., 1:2] / self.xi_bound)         # (B, L, 1)
+        sigma = torch.exp(k1)
 
-        m = maxis[0]
-        xi = k2 - sigma / (m + 1e-6)        # (B, B, L, M)
-        xi = xi.mean(dim=-1, keepdim=True)      # (B, L, 1)
+        L = all_ks.shape[1]
+        m = maxis[0].reshape(L, -1).amax(dim=-1, keepdim=True)   # (L, 1) maximo por estacion
+        xi = torch.exp(k2) - sigma / (m + 1e-6)                  # (B, L, 1)
+        xi = self.xi_floor + F.softplus(xi - self.xi_floor, beta=self.beta)
 
         return torch.cat((xi, sigma), dim=-1)   # (B, L, 2)
 
@@ -219,9 +248,28 @@ class Combiner(nn.Module):
         # Create constrainer to enforce GPD constraints
         self.constrainer = Constrainer()
         
+        # Escala (en unidades del contaminante) con la que se normalizan los excesos que entran
+        # al DeepSet. Se fija con init_from_train_data y se guarda en el state_dict.
+        self.register_buffer("set_scale", torch.tensor(1.0))
+        
         # Save the final output for the model
         self.odim = gcn_params["out_features"]
         
+    
+    @torch.no_grad()
+    def init_from_train_data(self, train_data: dict, xi0: float = 0.3) -> None:
+        """Ajusta la escala de entrada y el punto de arranque de (sigma, xi) con los excesos de train.
+
+        Los excesos y se dejan en unidades originales (ppb, ug/m3) porque la GPD vive en esas
+        unidades. Aqui solo se arranca sigma ~ media de los excesos (en vez de exp(0)=1) y se
+        normalizan los excesos que entran al DeepSet.
+        """
+        y = train_data["y"]
+        v = y[torch.isfinite(y) & (y >= 0)]
+        mean = float(v.mean()) if v.numel() > 0 else 1.0
+        self.set_scale.fill_(mean)
+        bias = torch.tensor([math.log(mean), math.log(xi0)], dtype=self.gcn.out_bias.dtype)
+        self.gcn.out_bias.copy_(bias[: self.gcn.out_bias.numel()].to(self.gcn.out_bias.device))
     
     def forward(self, vecs: torch.Tensor, sets: torch.Tensor, D: torch.Tensor, maxis=None):
         """
@@ -245,6 +293,7 @@ class Combiner(nn.Module):
         # Compute set representations
         if sets is not None:
             ndim_s = sets.shape[1]
+            sets = sets / self.set_scale                            # excesos en escala ~1 (NaN se conserva)
             sets = sets.reshape([bsize, ndim_s, l*t])               # (ndim_s, l*t)
             sets = sets.permute([0, 2, 1])                          
             sets = sets.reshape([-1, ndim_s])                       # (l*t, ndim_s)
