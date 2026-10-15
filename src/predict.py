@@ -73,7 +73,7 @@ def main(pollutant=None):
         gcn_params = params_dict["gcn_params"],
         graph_params = params_dict["graph_params"],
     )
-    model.load_state_dict(torch.load(f"models/model_{pollutant}{extra}.pth", map_location="cpu"))
+    model.load_state_dict(torch.load(f"models/model_{pollutant}.pth", map_location="cpu"))
     
     # DISTANCES
     D = haversine_matrix(STATION_COORDS)
@@ -101,7 +101,7 @@ def main(pollutant=None):
     
     df["prob_over_threshold"] = 1 - genpareto.cdf(X_THRESHOLDS[pollutant], c = df["XI"], scale = df["SIGMA"])
     
-    df.to_csv(f"data/predictions_{pollutant}{extra}_probs.csv", index=False)
+    df.to_csv(f"data/predictions_{pollutant}{extra}.csv", index=False)
     
     
 if __name__ == '__main__':

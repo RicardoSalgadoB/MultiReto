@@ -6,6 +6,7 @@ import pickle
 
 from pathlib import Path
 from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
 
 try:
     from utils.model_architecture import Combiner
@@ -267,15 +268,20 @@ def main(pollutant=None):
     model.init_from_train_data(train_data)
     
     # TRAIN THE MODEL (TrainConfig usa "cuda" si hay GPU disponible)
-    train_config = TrainConfig()
+    train_config = TrainConfig(eval_every=1)
     
-    training_loop(
+    history = training_loop(
         model = model, 
         train_data = train_data,
         val_data = test_data, 
         D = haversine_matrix(STATION_COORDS), 
         config = train_config
     )
+    
+    plt.plot(history["train_nll"], label="Train")
+    plt.plot(history["val_nll"], label="Val")
+    plt.legend()
+    plt.show()
     
     # SAVE THE MODEL
     Path("models").mkdir(exist_ok=True)
