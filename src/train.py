@@ -245,7 +245,7 @@ def main():
     pollutant = "SO2"
     extra = "_hourly"
     train_data, test_data, val_data = prepare_hourly_data(
-        filename='data/datos_imputados.csv', 
+        filename='data/datos_corregidos.csv', 
         pollutant=pollutant, 
         threshold=U_THRESHOLDS[pollutant]
     )

@@ -49,7 +49,7 @@ def main():
     pollutant = "SO2"
     extra = "_hourly"
     # LOAD DATA
-    train_data_so2_hourly, test_data_so2_hourly, val_data_so2_hourly = prepare_hourly_data(
+    train_data_so2_hourly, test_data_so2_hourly, v = prepare_hourly_data(
         'data/datos_imputados.csv', pollutant, U_THRESHOLDS[pollutant])
     
     # LOAD MODEL
