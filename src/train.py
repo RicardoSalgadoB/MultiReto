@@ -242,10 +242,15 @@ def prepare_hourly_data(filename, pollutant, threshold):
 
 
 def main(pollutant=None):
-    """Entrena el modelo de un contaminante: `python src/train.py O3` (por defecto SO2)."""
+    """Entrena el modelo de un contaminante: `python src/train.py SO2 _hourly` (por defecto O3)."""
     if pollutant is None:
-        pollutant = sys.argv[1] if len(sys.argv) > 1 else "SO2"
-    extra = "_hourly"
+            pollutant = sys.argv[1] if len(sys.argv) > 1 else "O3"
+           
+    if len(sys.argv) > 2:
+        extra = sys.argv[2]
+    else:
+        extra = ""
+        
     train_data, test_data, val_data = prepare_hourly_data(
         filename='data/datos_imputados.csv', 
         pollutant=pollutant, 
