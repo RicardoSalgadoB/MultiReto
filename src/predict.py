@@ -3,6 +3,7 @@ import torch
 import numpy as np
 import pandas as pd
 from pathlib import Path
+from scipy.stats import genpareto
 
 try:
     from utils.model_architecture import Combiner
@@ -21,61 +22,86 @@ except ModuleNotFoundError:
     
 
 STATION_NAMES = [
-    "SE",
-    "NE",
     "CE",
-    "CO",
-    "SO",
-    "NO2",
-    "NTE",
+    "NE",
     "NE2",
-    "SE2",
-    "S02",
-    "SE3",
-    "SUR",
-    "NTE2",
     "NE3",
+    "NO",
+    "NO2",
     "NO3",
+    "NTE",
+    "NTE2",
+    "SE",
+    "SE2",
+    "SE3",
+    "SO",
+    "SO2",
+    "SUR",
 ]
 
+U_THRESHOLDS = {
+    "PM2.5": 38.0,
+    "O3": 63.0,
+    "SO2": 20.2
+}
+
+X_THRESHOLDS = {
+    "PM2.5": 3.0,
+    "O3": 27.0,
+    "SO2": 54.8
+}
+
     
-def main():
+def main(pollutant=None):
+    """Genera (xi, sigma) por dia y estacion: `python src/predict.py SO2 _hourly` (por defecto O3)."""
+    if pollutant is None:
+        pollutant = sys.argv[1] if len(sys.argv) > 1 else "O3"
+       
+    if len(sys.argv) > 2:
+        extra = sys.argv[2]
+    else:
+        extra = ""
+        
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     # LOAD DATA
-    train_data_so2_hourly, test_data_so2_hourly, val_data_so2_hourly = prepare_hourly_data('data/datos_imputados.csv', "SO2", 20.2)
+    train_data, test_data, val_data = prepare_hourly_data(
+        'data/datos_imputados.csv', pollutant, U_THRESHOLDS[pollutant])
     
     # LOAD MODEL
-    model_so2_hourly = Combiner(
+    model = Combiner(
         ds_params = params_dict["ds_params"],
         gcn_params = params_dict["gcn_params"],
         graph_params = params_dict["graph_params"],
     )
-    model_so2_hourly.load_state_dict(torch.load("models/model_o3.pth", map_location="cpu"))
+    model.load_state_dict(torch.load(f"models/model_{pollutant}{extra}.pth", map_location="cpu"))
     
     # DISTANCES
     D = haversine_matrix(STATION_COORDS)
     
     # PREDICT
-    predictions_so2_hourly = predict(model_so2_hourly, train_data_so2_hourly, D)
+    predictions = predict(model, train_data, D, device=device)
     
     # SAVE PREDICTIONS
     dates = pd.date_range(
         start="2023-01-02",
-        periods=predictions_so2_hourly.shape[0],
+        periods=predictions.shape[0],
         freq="D"
     )
 
     df = pd.DataFrame({
-        "Fecha": np.repeat(dates, predictions_so2_hourly.shape[1]),
-        "Estacion": np.tile(np.arange(predictions_so2_hourly.shape[1]), predictions_so2_hourly.shape[0]),
-        "XI": predictions_so2_hourly[:, :, 0].ravel(),
-        "SIGMA": predictions_so2_hourly[:, :, 1].ravel()
+        "Fecha": np.repeat(dates, predictions.shape[1]),
+        "Estacion": np.tile(np.arange(predictions.shape[1]), predictions.shape[0]),
+        "XI": predictions[:, :, 0].ravel(),
+        "SIGMA": predictions[:, :, 1].ravel()
     })
     
     df["Estacion"] = df["Estacion"].replace(
         {i: STATION_NAMES[i] for i in range(len(STATION_NAMES))}
     )
     
-    df.to_csv("data/predictions_o3.csv", index=False)
+    df["prob_over_threshold"] = 1 - genpareto.cdf(X_THRESHOLDS[pollutant], c = df["XI"], scale = df["SIGMA"])
+    
+    df.to_csv(f"data/predictions_{pollutant}{extra}_probs.csv", index=False)
     
     
 if __name__ == '__main__':

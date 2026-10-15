@@ -82,13 +82,13 @@ class TrainConfig:
 
     nepochs: int = 1500                
     eval_every: int = 50               
-    lr: float = 1e-3
+    lr: float = 1e-4   # como en deepGPD; con 1e-3 el entrenamiento divergia
     weight_decay: float = 0.0
     grad_clip: Optional[float] = 1.0
     use_early_stopping: bool = True
     patience: int = 10                 
     max_zero_prob: float = 0.01        
-    device: str = "cpu" #Cambiar por "cuda" en caso de tener GPU
+    device: str = "cuda" if torch.cuda.is_available() else "cpu"  # usa la GPU si hay una disponible
     seed: int = 42
     ckpt_path: Optional[str] = "checkpoints/best.pt"
     verbose: bool = True
@@ -113,22 +113,28 @@ def _to_device(data: dict, device: torch.device) -> dict:
 def add_maxis(train_data: dict, *other_data: dict) -> None:
     """Agrega "maxis" a train/val/test usando siempre el máximo de 'y' en train.
 
-    Tiene la misma forma que y. Donde no hubo excesos en train se usa 1.
+    Tiene la misma forma que y, pero el valor es un escalar por estación (el mayor exceso
+    observado en esa estación durante el entrenamiento, sobre todas las horas y días), como
+    en deepGPD (maxis = nanmax(y_train) por ubicación). Si una estación no tuvo excesos en
+    train se usa el máximo de todas las estaciones (antes se rellenaba con 1, que en
+    unidades originales no tiene sentido).
 
-    'maxis' es el mayor exceso observado en cada nodo durante el entrenamiento. El
-    Constrainer del modelo lo usa para que xi nunca vuelva imposible una observación
+    'maxis' lo usa el Constrainer para que xi nunca vuelva imposible una observación
     (garantiza 1 + xi*y/sigma > 0 para los y de entrenamiento).
 
     Se usó de inspiración el repo "https://github.com/TylerPWilson/deepGPD/blob/main/training.py" 
 
     Args:
-        train_data: Dict con "y" de entrenamiento. Se modifica en el lugar.
+        train_data: Dict con "y" de entrenamiento (B, 1, l, t). Se modifica en el lugar.
         *other_data: Dicts de val y/o test. Se modifican en el lugar.
     """
     y = train_data["y"]
-    y_inf = torch.where(torch.isfinite(y), y, torch.full_like(y, float("-inf")))
-    train_max = y_inf.amax(dim=(0, 1))
-    train_max = torch.where(torch.isinf(train_max), torch.ones_like(train_max), train_max)
+    y_inf = torch.where(torch.isfinite(y) & (y >= 0), y, torch.full_like(y, float("-inf")))
+    train_max = y_inf.amax(dim=(0, 1, 3))                                   # (l,)
+    overall = train_max.max()
+    fallback = overall if torch.isfinite(overall) else torch.ones_like(overall)
+    train_max = torch.where(torch.isinf(train_max), fallback.expand_as(train_max), train_max)
+    train_max = train_max.view(1, 1, -1, 1)
     for data in (train_data, *other_data):
         data["maxis"] = train_max.expand_as(data["y"]).clone()
 
