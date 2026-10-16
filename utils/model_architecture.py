@@ -238,6 +238,24 @@ class Combiner(nn.Module):
         
         # Create Graph Constructor
         self.graph_constructor = Oceanus(**graph_params)
+        
+        x = 64
+        # Create MLP to modify freely the weights.
+        self.sequential = nn.Sequential(
+            nn.Linear(gcn_params["in_features"], x),
+            nn.Dropout(), # para que no explote
+            
+            nn.Linear(x,x),
+            nn.ReLU(),
+            nn.Linear(x,x),
+            nn.ReLU(),
+            nn.Linear(x,x),
+            nn.ReLU(),
+            nn.Dropout(),
+            
+            nn.Linear(x, gcn_params["in_features"]),
+            nn.Dropout()
+        )
 
         # Create GCN
         self.gcn = GCN(**gcn_params)
@@ -319,6 +337,9 @@ class Combiner(nn.Module):
         # print(out[:2, :, 10, :5])
         out_3d = out.reshape([bsize, -1, l*t])           # (d_set + d_mask + ndim_v, l * t)
         out_3d = out_3d.permute([0, 2, 1])                  # (l * t, d_set + d_mask + ndim_v) 
+        
+        out_3d = self.sequential(out_3d)
+        
         out = self.gcn(out_3d, L)                  # (l * t, d_set + d_mask + ndim_v) -> (l, 2)
         # print(out[:2, 10, :])
         
