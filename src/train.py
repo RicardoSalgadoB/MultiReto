@@ -253,7 +253,7 @@ def main(pollutant=None):
         extra = ""
         
     train_data, test_data, val_data = prepare_hourly_data(
-        filename='data/datos_imputados.csv', 
+        filename='data/datos_corregidos.csv', 
         pollutant=pollutant, 
         threshold=U_THRESHOLDS[pollutant]
     )
@@ -268,7 +268,7 @@ def main(pollutant=None):
     model.init_from_train_data(train_data)
     
     # TRAIN THE MODEL (TrainConfig usa "cuda" si hay GPU disponible)
-    train_config = TrainConfig(eval_every=1)
+    train_config = TrainConfig(patience=50, eval_every=1)
     
     history = training_loop(
         model = model, 
@@ -281,6 +281,7 @@ def main(pollutant=None):
     plt.plot(history["train_nll"], label="Train")
     plt.plot(history["val_nll"], label="Val")
     plt.legend()
+    plt.grid()
     plt.show()
     
     # SAVE THE MODEL
