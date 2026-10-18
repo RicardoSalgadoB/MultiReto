@@ -101,6 +101,7 @@ def main(pollutant=None):
     
     df["prob_over_threshold"] = 1 - genpareto.cdf(X_THRESHOLDS[pollutant], c = df["XI"], scale = df["SIGMA"])
     
+    print(f"data/predictions_{pollutant}{extra}.csv")
     df.to_csv(f"data/predictions_{pollutant}{extra}.csv", index=False)
     
     

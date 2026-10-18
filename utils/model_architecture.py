@@ -6,7 +6,7 @@ from torch import nn
 import torch.nn.functional as F
 
 from utils.haversine_distance import compute_adj_matrix
-from utils.graph_constructor import Oceanus
+from utils.graph_constructor import Iapetus
 
 class DeepSet(nn.Module):
     """Implementation of Deep Set.
@@ -237,7 +237,7 @@ class Combiner(nn.Module):
         super().__init__()
         
         # Create Graph Constructor
-        self.graph_constructor = Oceanus(**graph_params)
+        self.graph_constructor = Iapetus(**graph_params)
         
         x = 64
         # Create MLP to modify freely the weights.

@@ -91,7 +91,7 @@ class Coeus(NormalizedLaplacianMatrixGenerator):
 
 class Crius(NormalizedLaplacianMatrixGenerator):
     """
-    Weighted onnection between all adjacent nodes in time intervals.
+    Weighted connection between all adjacent nodes in time intervals.
     """
     def __init__(self, num_hours):
         super().__init__(num_hours)
