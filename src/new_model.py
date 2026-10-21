@@ -1,7 +1,9 @@
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
+import matplotlib.pyplot as plt
 from scipy.optimize import minimize
+from sklearn import metrics
 
 # U - THRESHOLD
 U = 63.0
@@ -10,12 +12,14 @@ R = 24
 
 C = 90.0
 
+VARIABLE = "O3"
+
 def load_data(filename):
     # Load data
     data = pd.read_csv(filename)
 
     # Select relevant columns
-    data = data[["Fecha y hora", "Estacion", "O3", "PRS", "RAINF", "RH", "SR", "TOUT", "WSR", "WDR"]]
+    data = data[["Fecha y hora", "Estacion", VARIABLE, "PRS", "RAINF", "RH", "SR", "TOUT", "WSR", "WDR"]]
     
     # Convert dates to datetime
     data["Fecha y hora"] = pd.to_datetime(data["Fecha y hora"])
@@ -97,8 +101,8 @@ def build_logit_data(x, met, u, horizon=1):
 def build_logit_station_data(station_data, station_names):
     logit_station_data = {}
     for station in station_names:
-        x = station_data[station]["O3"]
-        met = station_data[station].drop(columns=["O3"])
+        x = station_data[station][VARIABLE]
+        met = station_data[station].drop(columns=[VARIABLE])
         logit_station_data[station] = build_logit_data(x, met, U)
     return logit_station_data
 
@@ -162,7 +166,7 @@ def build_exceedance_data(station_data, station_names, cols):
     exceedance_station_data = {}
     for station in station_names:
         d = station_data[station]
-        x = d["O3"]
+        x = d[VARIABLE]
         clusters = runs_decluster(x, U, R)
         d = d.loc[clusters["peak_time"], cols].copy()
         d["y"] = clusters["peak"].to_numpy() - U
@@ -253,7 +257,7 @@ def summary(m):
 
 
 def prepare_test_data(data):
-    x = data["O3"]
+    x = data[VARIABLE]
     data["x_t"] = x                                   # current level
     data["exc_t"] = (x > U).astype(float)             # exceeded now?
     data["x_lag1"] = x.shift(1)
@@ -269,8 +273,8 @@ def prob_exceed(c, zeta, sigma, xi, u):
         return np.ones_like(zeta)
     t = np.maximum(1 + xi * (c - u) / sigma, 0)     # t=0 -> prob 0 (bounded tail)
     surv = np.exp(-(c - u) / sigma) if abs(xi) < 1e-6 else t ** (-1 / xi)
-    print("Zeta:", zeta.round(3))
-    print("Surv:", surv)
+    # print("Zeta:", zeta.round(3))
+    # print("Surv:", surv)
     return zeta * surv
 
 
@@ -322,15 +326,69 @@ def main():
     # Example: predictions
     test = station_test_data["SUR"]
     test = prepare_test_data(test)
-    test = test[
-        (test.index >= "2025-11-17 00:00:00")
-        & (test.index <= "2025-11-17 23:00:00")
-    ]
-    lg_model = logit_models["SUR"]
-    gpd_model = gpd_models["SUR"]
-    p_c = two_part_prob(C, test, lg_model, gpd_model, U)
-    print(p_c.round(3))
+    # test = test[
+    #     (test.index >= "2025-11-17 00:00:00")
+    #     & (test.index <= "2025-11-17 23:00:00")
+    # ]
+    # lg_model = logit_models["SUR"]
+    # gpd_model = gpd_models["SUR"]
+    # p_c = two_part_prob(C, test, lg_model, gpd_model, U)
+    # print(p_c.round(3))
     
+    # Complete predictions
+    preds_station = {}
+    threshold = 0.45
+    for station in STATIONS:
+        test = station_test_data[station]
+        test = prepare_test_data(test)
+        preds = pd.DataFrame(index=test.index)
+        preds["x"] = test[VARIABLE]
+        preds["real_exc"] = (preds["x"] >= C)
+        lg_model = logit_models[station]
+        gpd_model = gpd_models[station]
+        p_c = two_part_prob(C, test, lg_model, gpd_model, U)
+        preds["p"] = p_c
+        preds["pred_exc"] = (p_c >= threshold)
+        preds_station[station] = preds
+
+    confusion_matrix = metrics.confusion_matrix(preds_station["SUR"]["real_exc"], preds_station["SUR"]["pred_exc"])
+    cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix = confusion_matrix, display_labels = ["No Exceso", "Exceso"])
+    cm_display.plot()
+    plt.show()
+    
+    fpr, tpr, _ = metrics.roc_curve(preds_station["SUR"]["real_exc"], preds_station["SUR"]["pred_exc"])
+    roc_auc = metrics.auc(fpr, tpr)
+    plt.plot(fpr, tpr, label=f'(AUC = {roc_auc:.2f})')
+    plt.plot([0, 1], [0, 1], 'r--', label='Random Guess')
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC Curves for Two Models')
+    plt.legend()
+    plt.show()
+    
+    daily_preds = {}
+    for station in STATIONS:
+        hourly = preds_station[station]
+        daily = hourly[["x", "p"]].resample('D').max()
+        daily["real_exc"] = (daily["x"] >= C)
+        daily["pred_exc"] = (daily["p"] >= threshold)
+        daily_preds[station] = daily
+        
+    confusion_matrix = metrics.confusion_matrix(daily_preds["SUR"]["real_exc"], daily_preds["SUR"]["pred_exc"])
+    cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix = confusion_matrix, display_labels = ["No Exceso", "Exceso"])
+    cm_display.plot()
+    plt.show()
+    
+    fpr, tpr, _ = metrics.roc_curve(daily_preds["SUR"]["real_exc"], daily_preds["SUR"]["pred_exc"])
+    roc_auc = metrics.auc(fpr, tpr)
+    plt.plot(fpr, tpr, label=f'(AUC = {roc_auc:.2f})')
+    plt.plot([0, 1], [0, 1], 'r--', label='Random Guess')
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC Curves for Two Models')
+    plt.legend()
+    plt.show()
+        
 
 if __name__ == "__main__":
     main()
