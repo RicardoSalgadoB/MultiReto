@@ -127,8 +127,12 @@ def predict_logit(res, mu, sd, df, feats):
 def fit_logit_all_stations(logit_station_data, station_names, features):
     models = {}
     for station in station_names:
+        if isinstance(features, dict):
+            feats = features[station]
+        else:
+            feats = features
         data = logit_station_data[station]
-        res, mu, sd = fit_logit(data, features)
+        res, mu, sd = fit_logit(data, feats)
         models[station] = (res, mu, sd, features)
     return models
 
@@ -228,10 +232,11 @@ def fit_cov_gpd(data, covs, xi0=0.1):
             "mu": mu, "sd": sd, "Z": Z, "y": y, "covs": covs}
     
     
-def fit_cov_gpd_all_stations(station_data, station_names, covs, xi0=0.1):
+def fit_cov_gpd_all_stations(station_data, station_names, covs_per_station, xi0=0.1):
     models = {}
     for station in station_names:
         d = station_data[station]
+        covs = covs_per_station.get(station, default = covs_per_station["default"])
         model = fit_cov_gpd(d, covs, xi0)
         models[station] = model.copy()
     return models
@@ -316,14 +321,52 @@ def main():
     
     # MODEL 1: Logistic Regression
     logit_station_data = build_logit_station_data(station_train_data, STATIONS)
-    logit_feats = ["x_t", "exc_t", "max24", "n_exc7", "WSR", "TOUT", "RH", "wind_u", "wind_v"]
+    persistence_feats = ["x_t", "exc_t", "max24", "n_exc7"]
+    meteorological_feats = ["WSR", "TOUT", "RH", "wind_u", "wind_v"]
+    time_feats = ["hour_sin", "hour_cos"]
+    logit_feats = {
+        "CE": persistence_feats + meteorological_feats + time_feats,
+        "NE": persistence_feats + meteorological_feats + time_feats,
+        "NE2": persistence_feats + time_feats,
+        "NE3": persistence_feats + meteorological_feats + time_feats,
+        "NO": persistence_feats + meteorological_feats + time_feats,
+        "NO2": persistence_feats + meteorological_feats + time_feats,
+        "NO3": persistence_feats + time_feats,
+        "NTE": persistence_feats + meteorological_feats + time_feats,
+        "NTE2": persistence_feats + meteorological_feats + time_feats,
+        "SE": persistence_feats + meteorological_feats + time_feats,
+        "SE2": persistence_feats + meteorological_feats + time_feats,
+        "SE3": persistence_feats + meteorological_feats + time_feats,
+        "SO": persistence_feats + time_feats,
+        "SO2": persistence_feats + meteorological_feats + time_feats,
+        "SUR": persistence_feats + meteorological_feats + time_feats,
+    }
     logit_models = fit_logit_all_stations(logit_station_data, STATIONS, logit_feats)
 
     # MODEL 2: GPD
     cols = ["WSR", "TOUT", "RH", "PRS", "SR", "hour_sin", "hour_cos", "month_sin", "month_cos", "wind_u", "wind_v"]
     exceedance_station_data = build_exceedance_data(station_train_data, STATIONS, cols)
     exceedance_station_data = augment_exceedance_data(exceedance_station_data, logit_models, logit_station_data, STATIONS)
-    covs = ["WSR", "TOUT", "RH", "zeta"]
+    met_covs = ["WSR", "TOUT", "RH", "wind_u", "wind_v"]
+    time_covs = ["hour_sin", "hour_cos"]
+    zeta_covs = ["zeta"]
+    covs = {
+        "CE": met_covs+time_covs+zeta_covs,
+        "NE": time_covs+zeta_covs,
+        "NE2": zeta_covs,
+        "NE3": zeta_covs,
+        "NO": time_covs+zeta_covs,
+        "NO2": zeta_covs,
+        "NO3": zeta_covs,
+        "NTE": zeta_covs,
+        "NTE2": met_covs+time_covs+zeta_covs,
+        "SE": met_covs,
+        "SE2": time_covs+zeta_covs,
+        "SE3": time_covs+zeta_covs,
+        "SO": zeta_covs,
+        "SO2": zeta_covs,
+        "SUR": met_covs+time_covs+zeta_covs,
+    }
     gpd_models = fit_cov_gpd_all_stations(exceedance_station_data, STATIONS, covs)
     
     # Final Summary

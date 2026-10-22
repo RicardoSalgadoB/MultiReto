@@ -130,9 +130,13 @@ def predict_logit(res, mu, sd, df, feats):
 def fit_logit_all_stations(logit_station_data, station_names, features):
     models = {}
     for station in station_names:
+        if isinstance(features, dict):
+            feats = features[station]
+        else:
+            feats = features
         data = logit_station_data[station]
-        res, mu, sd = fit_logit(data, features)
-        models[station] = (res, mu, sd, features)
+        res, mu, sd = fit_logit(data, feats)
+        models[station] = (res, mu, sd, feats)
     return models
 
 
@@ -195,7 +199,10 @@ def augment_exceedance_data(exceedance_station_data, logit_models, logit_station
         print(len(joint_idx), "/", len(d_idx))
         d = d.loc[joint_idx, ]
         lg_d = lg_d.loc[joint_idx, ]
-        zeta = predict_logit(res, mu, sd, lg_d, features)
+        if isinstance(features, dict):
+            zeta = predict_logit(res, mu, sd, lg_d, features[station])
+        else:
+            zeta = predict_logit(res, mu, sd, lg_d, features)
         d["zeta"] = zeta
         exceedance_station_data[station] = d
     return exceedance_station_data
@@ -231,9 +238,13 @@ def fit_cov_gpd(data, covs, xi0=0.1):
             "mu": mu, "sd": sd, "Z": Z, "y": y, "covs": covs}
     
     
-def fit_cov_gpd_all_stations(station_data, station_names, covs, xi0=0.1):
+def fit_cov_gpd_all_stations(station_data, station_names, covs_per_station, xi0=0.1):
     models = {}
     for station in station_names:
+        if isinstance(covs_per_station, dict):
+            covs = covs_per_station[station]
+        else:
+            covs = covs_per_station
         d = station_data[station]
         model = fit_cov_gpd(d, covs, xi0)
         models[station] = model.copy()
@@ -319,14 +330,52 @@ def main():
     
     # MODEL 1: Logistic Regression
     logit_station_data = build_logit_station_data(station_train_data, STATIONS)
-    logit_feats = ["x_t", "exc_t", "max24", "n_exc7", "WSR", "TOUT", "RH", "wind_u", "wind_v"]
+    persistence_feats = ["x_t", "exc_t", "max24", "n_exc7"]
+    meteorological_feats = ["WSR", "TOUT", "RH", "wind_u", "wind_v"]
+    time_feats = ["hour_sin", "hour_cos"]
+    logit_feats = {
+        "CE": persistence_feats + meteorological_feats + time_feats,
+        "NE": persistence_feats + meteorological_feats + time_feats,
+        "NE2": persistence_feats + time_feats,
+        "NE3": persistence_feats + meteorological_feats + time_feats,
+        "NO": persistence_feats + meteorological_feats + time_feats,
+        "NO2": persistence_feats + meteorological_feats + time_feats,
+        "NO3": persistence_feats + time_feats,
+        "NTE": persistence_feats + meteorological_feats + time_feats,
+        "NTE2": persistence_feats + meteorological_feats + time_feats,
+        "SE": persistence_feats + meteorological_feats + time_feats,
+        "SE2": persistence_feats + meteorological_feats + time_feats,
+        "SE3": persistence_feats + meteorological_feats + time_feats,
+        "SO": persistence_feats + time_feats,
+        "SO2": persistence_feats + meteorological_feats + time_feats,
+        "SUR": persistence_feats + meteorological_feats + time_feats,
+    }
     logit_models = fit_logit_all_stations(logit_station_data, STATIONS, logit_feats)
 
     # MODEL 2: GPD
     cols = ["WSR", "TOUT", "RH", "PRS", "SR", "hour_sin", "hour_cos", "month_sin", "month_cos", "wind_u", "wind_v"]
     exceedance_station_data = build_exceedance_data(station_train_data, STATIONS, cols)
     exceedance_station_data = augment_exceedance_data(exceedance_station_data, logit_models, logit_station_data, STATIONS)
-    covs = ["WSR", "TOUT", "RH", "zeta"]
+    met_covs = ["WSR", "TOUT", "RH", "wind_u", "wind_v"]
+    time_covs = ["hour_sin", "hour_cos"]
+    zeta_covs = ["zeta"]
+    covs = {
+        "CE": met_covs+time_covs+zeta_covs,
+        "NE": time_covs+zeta_covs,
+        "NE2": zeta_covs,
+        "NE3": zeta_covs,
+        "NO": time_covs+zeta_covs,
+        "NO2": zeta_covs,
+        "NO3": zeta_covs,
+        "NTE": zeta_covs,
+        "NTE2": met_covs+time_covs+zeta_covs,
+        "SE": met_covs,
+        "SE2": time_covs+zeta_covs,
+        "SE3": time_covs+zeta_covs,
+        "SO": zeta_covs,
+        "SO2": zeta_covs,
+        "SUR": met_covs+time_covs+zeta_covs,
+    }
     gpd_models = fit_cov_gpd_all_stations(exceedance_station_data, STATIONS, covs)
     
     # Final Summary
@@ -370,29 +419,6 @@ def main():
     plt.show()
     
     fpr, tpr, _ = metrics.roc_curve(preds_station["SUR"]["real_exc"], preds_station["SUR"]["pred_exc"])
-    roc_auc = metrics.auc(fpr, tpr)
-    plt.plot(fpr, tpr, label=f'(AUC = {roc_auc:.2f})')
-    plt.plot([0, 1], [0, 1], 'r--', label='Random Guess')
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('ROC Curves for Two Models')
-    plt.legend()
-    plt.show()
-    
-    daily_preds = {}
-    for station in STATIONS:
-        hourly = preds_station[station]
-        daily = hourly[["x", "p"]].resample('D').max()
-        daily["real_exc"] = (daily["x"] >= C)
-        daily["pred_exc"] = (daily["p"] >= threshold)
-        daily_preds[station] = daily
-        
-    confusion_matrix = metrics.confusion_matrix(daily_preds["SUR"]["real_exc"], daily_preds["SUR"]["pred_exc"])
-    cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix = confusion_matrix, display_labels = ["No Exceso", "Exceso"])
-    cm_display.plot()
-    plt.show()
-    
-    fpr, tpr, _ = metrics.roc_curve(daily_preds["SUR"]["real_exc"], daily_preds["SUR"]["pred_exc"])
     roc_auc = metrics.auc(fpr, tpr)
     plt.plot(fpr, tpr, label=f'(AUC = {roc_auc:.2f})')
     plt.plot([0, 1], [0, 1], 'r--', label='Random Guess')

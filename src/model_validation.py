@@ -6,7 +6,7 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.stats.stattools import durbin_watson
 
 try:
-    from model_hourly import (
+    from model_daily import (
         load_data,
         group_data_by_station,
         feature_engineering,
@@ -18,7 +18,7 @@ except ModuleNotFoundError:
     import sys
     from pathlib import Path
     sys.path.append(str(Path(__file__).resolve().parents[1]))
-    from model_hourly import (
+    from model_daily import (
         load_data,
         group_data_by_station,
         feature_engineering,
@@ -57,7 +57,10 @@ def validate_logit(res, train, feats, mu, sd, make_plots=False):
         bt_terms.append(bt_term_name)
         
     bt_design = sm.add_constant(bt_data)
-    bt_model = sm.Logit(train["y"], bt_design).fit(disp=0)
+    if train["y"].shape[0] < 50:
+        bt_model = sm.Logit(train["y"], bt_design).fit_regularized(method="l1", disp=0)
+    else:
+        bt_model = sm.Logit(train["y"], bt_design).fit(disp=0)
     
     # Extract p-values for interaction terms (p < 0.05 indicates non-linearity)
     bt_pvalues = bt_model.pvalues[bt_terms]

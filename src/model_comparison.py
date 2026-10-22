@@ -3,7 +3,7 @@ import pandas as pd
 from scipy.stats import chi2
 
 try:
-    from model_hourly import (
+    from model_daily import (
         load_data,
         group_data_by_station,
         feature_engineering,
@@ -18,7 +18,7 @@ except ModuleNotFoundError:
     import sys
     from pathlib import Path
     sys.path.append(str(Path(__file__).resolve().parents[1]))
-    from model_hourly import (
+    from model_daily import (
         load_data,
         group_data_by_station,
         feature_engineering,
@@ -46,6 +46,7 @@ GPD_MODEL_NAMES = (
     "( Time + Zeta )",
     "( Meteorological + Time )",
     "( Meteorological + Time + Zeta )",
+    "( Zeta )",
 )
 
 
@@ -160,11 +161,12 @@ def compare_logreg_all_stations(
 def compare_gpd(models):
     comparisons = (
         (0, 1), 
-        (0, 2), (1, 2), 
+        (0, 2), (1, 2), (7, 2),
         (0, 3), 
-         (0, 4), (3, 4),
+        (0, 4), (3, 4), (7, 4),
         (0, 5), (1, 5), (3, 5), 
-        (0, 6), (1, 6), (2, 6), (3, 6), (4, 6), (5, 6),
+        (0, 6), (1, 6), (2, 6), (3, 6), (4, 6), (5, 6), (7, 6),
+        (0, 7)
     )
     comparisons_d = {
             "Comparison": [],
@@ -197,6 +199,7 @@ def compare_gpd_all_stations(
     model_family_5,
     model_family_6,
     model_family_7,
+    model_family_8,
     station_names
 ):
     comparisons = pd.DataFrame({
@@ -217,6 +220,7 @@ def compare_gpd_all_stations(
             model_family_5[station],
             model_family_6[station],
             model_family_7[station],
+            model_family_8[station],
         ]
 
         comp = compare_gpd(models)
@@ -228,7 +232,7 @@ def compare_gpd_all_stations(
 
 def main():
 # General data preparation
-    data = load_data("data/datos_no_imputados.csv")
+    data = load_data("data/datos_corregidos.csv")
     station_data, STATIONS = group_data_by_station(data)
     station_data = feature_engineering(station_data, STATIONS)
     station_train_data, station_test_data = split_data(station_data, STATIONS)
@@ -267,28 +271,29 @@ def main():
         logit_met_time_models,
         STATIONS
     )
-    null_comp_logreg_df.to_csv('data/comparisons/null_logreg.csv', index=False)
-    comp_logreg_df.to_csv('data/comparisons/logreg.csv', index=False)
+    null_comp_logreg_df.to_csv('data/comparisons/null_logreg_hourly.csv', index=False)
+    comp_logreg_df.to_csv('data/comparisons/logreg_hourly.csv', index=False)
     
     
     # MODEL 2: GPD
     cols = ["WSR", "TOUT", "RH", "PRS", "SR", "hour_sin", "hour_cos", "month_sin", "month_cos", "wind_u", "wind_v"]
     exceedance_station_data = build_exceedance_data(station_train_data, STATIONS, cols)
-    pers_exceedance_data = augment_exceedance_data(exceedance_station_data, logit_persistence_models, logit_station_data, STATIONS)
-    met_exceedance_data = augment_exceedance_data(exceedance_station_data, logit_met_models, logit_station_data, STATIONS)
-    time_exceedance_data = augment_exceedance_data(exceedance_station_data, logit_time_models, logit_station_data, STATIONS)
+    # pers_exceedance_data = augment_exceedance_data(exceedance_station_data, logit_persistence_models, logit_station_data, STATIONS)
+    # met_exceedance_data = augment_exceedance_data(exceedance_station_data, logit_met_models, logit_station_data, STATIONS)
+    # time_exceedance_data = augment_exceedance_data(exceedance_station_data, logit_time_models, logit_station_data, STATIONS)
     met_time_exceedance_data = augment_exceedance_data(exceedance_station_data, logit_met_time_models, logit_station_data, STATIONS)
     stationary_covs = []
     met_covs = ["WSR", "TOUT", "RH", "wind_u", "wind_v"]
     time_covs = ["hour_sin", "hour_cos"]
     zeta_covs = ["zeta"]
-    gpd_stationary_models = fit_cov_gpd_all_stations(pers_exceedance_data, STATIONS, stationary_covs)
-    gpd_met_models = fit_cov_gpd_all_stations(met_exceedance_data, STATIONS, met_covs)
-    gpd_met_zeta_models = fit_cov_gpd_all_stations(met_exceedance_data, STATIONS, met_covs + zeta_covs)
-    gpd_time_models = fit_cov_gpd_all_stations(time_exceedance_data, STATIONS, time_covs)
-    gpd_time_zeta_models = fit_cov_gpd_all_stations(time_exceedance_data, STATIONS, time_covs + zeta_covs)
+    gpd_stationary_models = fit_cov_gpd_all_stations(met_time_exceedance_data, STATIONS, stationary_covs)
+    gpd_met_models = fit_cov_gpd_all_stations(met_time_exceedance_data, STATIONS, met_covs)
+    gpd_met_zeta_models = fit_cov_gpd_all_stations(met_time_exceedance_data, STATIONS, met_covs + zeta_covs)
+    gpd_time_models = fit_cov_gpd_all_stations(met_time_exceedance_data, STATIONS, time_covs)
+    gpd_time_zeta_models = fit_cov_gpd_all_stations(met_time_exceedance_data, STATIONS, time_covs + zeta_covs)
     gpd_met_time_models = fit_cov_gpd_all_stations(met_time_exceedance_data, STATIONS, met_covs + time_covs)
     gpd_met_time_zeta_models = fit_cov_gpd_all_stations(met_time_exceedance_data, STATIONS, met_covs + time_covs + zeta_covs)
+    gpd_zeta_models = fit_cov_gpd_all_stations(met_time_exceedance_data, STATIONS, zeta_covs)
     
     
     # GPD comparisons
@@ -300,9 +305,10 @@ def main():
         gpd_time_zeta_models,
         gpd_met_time_models,
         gpd_met_time_zeta_models,
+        gpd_zeta_models,
         STATIONS
     )
-    comp_gpd_df.to_csv('data/comparisons/gpd.csv', index=False)
+    comp_gpd_df.to_csv('data/comparisons/gpd_hourly.csv', index=False)
     
 
 if __name__ == '__main__':
