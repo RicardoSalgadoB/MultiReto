@@ -9,11 +9,11 @@ params_dict = {
    },
    "gcn_params": {
        "in_features": 4 + 1 + 17,
-       "hidden_dim": 32,
+       "hidden_dim": 64, #32
        "out_features": 2,
        "num_nodes": 24*15,  # num_intervals * num_locations
        "n_outputs": 15,
-       "nlayers": 2,    # 3 capas GCN en total. Con 12 el modelo sobreajustaba y era inestable (ver chequeo)
+       "nlayers": 6,    # 3 capas GCN en total. Con 12 el modelo sobreajustaba y era inestable (ver chequeo)
        "use_bias": True
    },
    "graph_params": {
