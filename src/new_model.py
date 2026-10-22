@@ -80,17 +80,22 @@ def build_logit_data(x, met, u, horizon=1):
     d.loc[x.shift(-horizon).isna(), "y"] = np.nan
 
     # --- persistence-type features (the strongest predictors) ---
+    # d["x_t"] = np.log1p(x)                                   # current level
     d["x_t"] = x                                   # current level
     d["exc_t"] = (x > u).astype(float)             # exceeded now?
     d["x_lag1"] = x.shift(1)
     d["x_lag24"] = x.shift(24)
-    d["max36"] = x.rolling(36).max()               # recent peak
+    # d["max24"] = np.log1p(np.log1p(x.rolling(24).max()))            # recent peak
+    d["max24"] = x.rolling(24).max()            # recent peak
+    # d["n_exc7"] = np.log1p(np.log1p((x > u).astype(float).rolling(7).sum()))   # recent episode activity
     d["n_exc7"] = (x > u).astype(float).rolling(7).sum()   # recent episode activity
 
     # --- meteorology ---
-    for c in ["WSR", "TOUT", "RH", "PRS", "SR"]:
+    for c in ["WSR", "RH", "PRS", "SR"]:
         d[c] = met[c]
-    d["wind_u"], d["wind_v"] = met["wind_u"], met["wind_v"]
+    d["TOUT"] = met["TOUT"]
+    d["wind_u"] = met["wind_u"]
+    d["wind_v"] = met["wind_v"]
     
     # --- temporal ---
     d["hour_sin"], d["hour_cos"] = met["hour_sin"], met["hour_cos"]
@@ -262,7 +267,7 @@ def prepare_test_data(data):
     data["exc_t"] = (x > U).astype(float)             # exceeded now?
     data["x_lag1"] = x.shift(1)
     data["x_lag24"] = x.shift(24)
-    data["max36"] = x.rolling(36).max()               # recent peak
+    data["max24"] = x.rolling(24).max()               # recent peak
     data["n_exc7"] = (x > U).astype(float).rolling(7).sum()
     return data
 
@@ -301,17 +306,21 @@ def two_part_prob(c, data, logit_model, gpd_model, u):
 def main():
     # General data preparation
     data = load_data("data/datos_corregidos.csv")
+    data2 = load_data("data/datos_no_imputados.csv")
     station_data, STATIONS = group_data_by_station(data)
+    station_data2, STATIONS = group_data_by_station(data2)
     station_data = feature_engineering(station_data, STATIONS)
-    station_train_data, station_test_data = split_data(station_data, STATIONS)
+    station_data2 = feature_engineering(station_data2, STATIONS)
+    station_train_data, _ = split_data(station_data, STATIONS)
+    _, station_test_data = split_data(station_data2, STATIONS)
     
     # MODEL 1: Logistic Regression
     logit_station_data = build_logit_station_data(station_train_data, STATIONS)
-    logit_feats = ["x_t", "exc_t", "max36", "n_exc7", "WSR", "TOUT", "RH", "wind_u", "wind_v"]
+    logit_feats = ["x_t", "exc_t", "max24", "n_exc7", "WSR", "TOUT", "RH", "wind_u", "wind_v"]
     logit_models = fit_logit_all_stations(logit_station_data, STATIONS, logit_feats)
 
     # MODEL 2: GPD
-    cols = ["WSR", "TOUT", "RH", "PRS", "SR", "hour_sin", "hour_cos", "wind_u", "wind_v"]
+    cols = ["WSR", "TOUT", "RH", "PRS", "SR", "hour_sin", "hour_cos", "month_sin", "month_cos", "wind_u", "wind_v"]
     exceedance_station_data = build_exceedance_data(station_train_data, STATIONS, cols)
     exceedance_station_data = augment_exceedance_data(exceedance_station_data, logit_models, logit_station_data, STATIONS)
     covs = ["WSR", "TOUT", "RH", "zeta"]
@@ -324,8 +333,8 @@ def main():
         print(summary(model))
         
     # Example: predictions
-    test = station_test_data["SUR"]
-    test = prepare_test_data(test)
+    # test = station_test_data["SUR"]
+    # test = prepare_test_data(test)
     # test = test[
     #     (test.index >= "2025-11-17 00:00:00")
     #     & (test.index <= "2025-11-17 23:00:00")
@@ -337,7 +346,7 @@ def main():
     
     # Complete predictions
     preds_station = {}
-    threshold = 0.45
+    threshold = 0.02    # 0.44-0.47 (recomendado, corregidos) / ~0.15 (no imputados) / 0.02 - 6 horas / 0.25 - 3 horas
     for station in STATIONS:
         test = station_test_data[station]
         test = prepare_test_data(test)
@@ -348,7 +357,8 @@ def main():
         gpd_model = gpd_models[station]
         p_c = two_part_prob(C, test, lg_model, gpd_model, U)
         preds["p"] = p_c
-        preds["pred_exc"] = (p_c >= threshold)
+        # preds["p"] = preds["p"].shift(-6)
+        preds["pred_exc"] = (preds["p"] >= threshold)
         preds_station[station] = preds
 
     confusion_matrix = metrics.confusion_matrix(preds_station["SUR"]["real_exc"], preds_station["SUR"]["pred_exc"])
@@ -388,7 +398,7 @@ def main():
     plt.title('ROC Curves for Two Models')
     plt.legend()
     plt.show()
-        
+     
 
 if __name__ == "__main__":
     main()
