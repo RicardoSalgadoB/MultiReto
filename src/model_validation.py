@@ -6,7 +6,7 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.stats.stattools import durbin_watson
 
 try:
-    from src.new_model import (
+    from model_hourly import (
         load_data,
         group_data_by_station,
         feature_engineering,
@@ -18,7 +18,7 @@ except ModuleNotFoundError:
     import sys
     from pathlib import Path
     sys.path.append(str(Path(__file__).resolve().parents[1]))
-    from src.new_model import (
+    from model_hourly import (
         load_data,
         group_data_by_station,
         feature_engineering,
