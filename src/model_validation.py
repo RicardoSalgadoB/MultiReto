@@ -7,7 +7,7 @@ from statsmodels.stats.stattools import durbin_watson
 from scipy.stats import expon
 
 try:
-    from model_daily import (
+    from model_hourly import (
         load_data,
         group_data_by_station,
         feature_engineering,
@@ -22,7 +22,7 @@ except ModuleNotFoundError:
     import sys
     from pathlib import Path
     sys.path.append(str(Path(__file__).resolve().parents[1]))
-    from model_daily import (
+    from model_hourly import (
         load_data,
         group_data_by_station,
         feature_engineering,
@@ -236,31 +236,28 @@ def main():
     
     prohibited_idx = set()
     for j, station in enumerate(STATIONS):
-        print(f"\n------ {station} ------")
         fig, ax = plt.subplots(1, 2, figsize=(10, 4))
         m0 = gpd_stat_models[station]
         m1 = gpd_models[station]
         for m, lab in [(m0, "stationary"), (m1, "covariates")]:
             e = np.sort(residuals(m))
             q = expon.ppf((np.arange(1, len(e) + 1) - 0.5) / len(e))
-            ax[0].plot(q, e, "o", ms=3, label=lab)
+            ax[0].plot(q, e, "o", ms=3, label=lab, alpha=0.5)
         lim = [0, max(q.max(), e.max())]
         ax[0].plot(lim, lim, "k--"); ax[0].set_xlabel("Exp(1) quantiles")
         ax[0].set_ylabel("Residual quantiles"); ax[0].legend()
         ax[1].hist(residuals(m1), bins=20, density=True)
-        e1 = np.sort(residuals(m1))
-        q1 = expon.ppf((np.arange(1, len(e1) + 1) - 0.5) / len(e1))
-        high_res_idx = np.where(abs(residuals(m1)-q1) > 1)[0]
-        print(list(m1["indices"][high_res_idx].astype(str)))
-        prohibited_idx.update(list(m1["indices"][high_res_idx].astype(str)))
+        # print(f"\n------ {station} ------")
+        # e1 = np.sort(residuals(m1))
+        # q1 = expon.ppf((np.arange(1, len(e1) + 1) - 0.5) / len(e1))
+        # high_res_idx = np.where(abs(residuals(m1)-q1) > 2)[0]
+        # print(list(m1["indices"][high_res_idx].astype(str)))
+        # prohibited_idx.update(list(m1["indices"][high_res_idx].astype(str)))
         ax[1].plot(np.linspace(0, 5), expon.pdf(np.linspace(0, 5)))
         ax[0].grid()
         fig.suptitle(station)
         plt.tight_layout()
         plt.show()
-      
-    print("\nNO GO:")  
-    print(prohibited_idx)
     
 
 if __name__ == "__main__":
