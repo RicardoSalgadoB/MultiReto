@@ -398,8 +398,8 @@ def main():
     # print(p_c.round(3))
     
     # Complete predictions
-    preds_station = {}
-    threshold = 0.6    # 0.6 - 0.65 (recomendado, corregidos) / ~0.15 (no imputados) / 0.02 - 6 horas / 0.25 - 3 horas
+    preds_station = pd.DataFrame()
+    threshold = 0.45    # 0.6 - 0.65 (recomendado, corregidos) / ~0.15 (no imputados) / 0.02 - 6 horas / 0.25 - 3 horas
     for station in STATIONS:
         test = station_test_data[station]
         test = prepare_test_data(test)
@@ -412,14 +412,15 @@ def main():
         preds["p"] = p_c
         # preds["p"] = preds["p"].shift(-6)
         preds["pred_exc"] = (preds["p"] >= threshold)
-        preds_station[station] = preds
+        preds["estacion"] = station
+        preds_station = pd.concat([preds_station, preds])
 
-    confusion_matrix = metrics.confusion_matrix(preds_station["SUR"]["real_exc"], preds_station["SUR"]["pred_exc"])
+    confusion_matrix = metrics.confusion_matrix(preds_station["real_exc"], preds_station["pred_exc"])
     cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix = confusion_matrix, display_labels = ["No Exceso", "Exceso"])
     cm_display.plot()
     plt.show()
     
-    fpr, tpr, _ = metrics.roc_curve(preds_station["SUR"]["real_exc"], preds_station["SUR"]["pred_exc"])
+    fpr, tpr, _ = metrics.roc_curve(preds_station["real_exc"], preds_station["pred_exc"])
     roc_auc = metrics.auc(fpr, tpr)
     plt.plot(fpr, tpr, label=f'(AUC = {roc_auc:.2f})')
     plt.plot([0, 1], [0, 1], 'r--', label='Random Guess')
