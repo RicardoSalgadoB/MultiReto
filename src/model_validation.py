@@ -234,7 +234,9 @@ def main():
     gpd_models = fit_cov_gpd_all_stations(exceedance_station_data, STATIONS, covs)
     gpd_stat_models = fit_cov_gpd_all_stations(exceedance_station_data, STATIONS, [])
     
+    prohibited_idx = set()
     for j, station in enumerate(STATIONS):
+        print(f"\n------ {station} ------")
         fig, ax = plt.subplots(1, 2, figsize=(10, 4))
         m0 = gpd_stat_models[station]
         m1 = gpd_models[station]
@@ -246,12 +248,19 @@ def main():
         ax[0].plot(lim, lim, "k--"); ax[0].set_xlabel("Exp(1) quantiles")
         ax[0].set_ylabel("Residual quantiles"); ax[0].legend()
         ax[1].hist(residuals(m1), bins=20, density=True)
+        e1 = np.sort(residuals(m1))
+        q1 = expon.ppf((np.arange(1, len(e1) + 1) - 0.5) / len(e1))
+        high_res_idx = np.where(abs(residuals(m1)-q1) > 1)[0]
+        print(list(m1["indices"][high_res_idx].astype(str)))
+        prohibited_idx.update(list(m1["indices"][high_res_idx].astype(str)))
         ax[1].plot(np.linspace(0, 5), expon.pdf(np.linspace(0, 5)))
         ax[0].grid()
         fig.suptitle(station)
-        
         plt.tight_layout()
         plt.show()
+      
+    print("\nNO GO:")  
+    print(prohibited_idx)
     
 
 if __name__ == "__main__":
