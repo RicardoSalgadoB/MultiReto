@@ -26,7 +26,7 @@ def load_data(filename):
     data["Fecha y hora"] = pd.to_datetime(data["Fecha y hora"])
     
     # Filter data
-    data = data[(data["Fecha y hora"] >= "2023-01-01 00:00:00") & (data["Fecha y hora"] < "2026-01-01 00:00:00")]
+    data = data[(data["Fecha y hora"] >= "2023-01-01 00:00:00")]
     
     # Reset index
     data.set_index("Fecha y hora", inplace=True)
@@ -66,13 +66,13 @@ def feature_engineering(station_data, station_names):
     return station_data
 
 
-def split_data(station_data, station_names):
+def split_data(station_data, station_names, split="2025-01-01 00:00:00"):
     train_data = {}
     test_data = {}
     for station in station_names:
         data = station_data[station]
-        train = data[(data.index < "2025-01-01 00:00:00")]
-        test = data[(data.index >= "2025-01-01 00:00:00")]
+        train = data[(data.index < split)]
+        test = data[(data.index >= split)]
         train_data[station] = train
         test_data[station] = test
     return train_data, test_data
@@ -327,7 +327,7 @@ def main():
     station_data = feature_engineering(station_data, STATIONS)
     station_data2 = feature_engineering(station_data2, STATIONS)
     station_train_data, _ = split_data(station_data, STATIONS)
-    _, station_test_data = split_data(station_data2, STATIONS)
+    _, station_test_data = split_data(station_data2, STATIONS, split="2026-01-01 00:00:00")
     
     # MODEL 1: Logistic Regression
     logit_station_data = build_logit_station_data(station_train_data, STATIONS)
@@ -399,7 +399,7 @@ def main():
     
     # Complete predictions
     preds_station = pd.DataFrame()
-    threshold = 0.45    # 0.6 - 0.65 (recomendado, corregidos) / ~0.15 (no imputados) / 0.02 - 6 horas / 0.25 - 3 horas
+    threshold = 0.3    # 0.6 - 0.65 (recomendado, corregidos) / ~0.15 (no imputados) / 0.02 - 6 horas / 0.25 - 3 horas
     for station in STATIONS:
         test = station_test_data[station]
         test = prepare_test_data(test)
@@ -418,6 +418,9 @@ def main():
     confusion_matrix = metrics.confusion_matrix(preds_station["real_exc"], preds_station["pred_exc"])
     cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix = confusion_matrix, display_labels = ["No Exceso", "Exceso"])
     cm_display.plot()
+    plt.xlabel("Predicción")
+    plt.ylabel("Valor Real")
+    plt.title("Predicciones por día")
     plt.show()
     
     fpr, tpr, _ = metrics.roc_curve(preds_station["real_exc"], preds_station["pred_exc"])
