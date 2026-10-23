@@ -231,7 +231,7 @@ def compare_gpd_all_stations(
 
 
 def main():
-# General data preparation
+    # General data preparation
     data = load_data("data/datos_corregidos.csv")
     station_data, STATIONS = group_data_by_station(data)
     station_data = feature_engineering(station_data, STATIONS)
@@ -271,8 +271,8 @@ def main():
         logit_met_time_models,
         STATIONS
     )
-    null_comp_logreg_df.to_csv('data/comparisons/null_logreg_hourly.csv', index=False)
-    comp_logreg_df.to_csv('data/comparisons/logreg_hourly.csv', index=False)
+    null_comp_logreg_df.to_csv('data/comparisons/null_logreg_daily.csv', index=False)
+    comp_logreg_df.to_csv('data/comparisons/logreg_daily.csv', index=False)
     
     
     # MODEL 2: GPD
@@ -308,7 +308,7 @@ def main():
         gpd_zeta_models,
         STATIONS
     )
-    comp_gpd_df.to_csv('data/comparisons/gpd_hourly.csv', index=False)
+    comp_gpd_df.to_csv('data/comparisons/gpd_daily.csv', index=False)
     
 
 if __name__ == '__main__':

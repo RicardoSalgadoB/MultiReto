@@ -133,7 +133,7 @@ def fit_logit_all_stations(logit_station_data, station_names, features):
             feats = features
         data = logit_station_data[station]
         res, mu, sd = fit_logit(data, feats)
-        models[station] = (res, mu, sd, features)
+        models[station] = (res, mu, sd, feats)
     return models
 
 
@@ -193,7 +193,7 @@ def augment_exceedance_data(exceedance_station_data, logit_models, logit_station
         lg_d_idx = set(lg_d.index)
         joint_idx = list(d_idx.intersection(lg_d_idx))
         
-        print(len(joint_idx), "/", len(d_idx))
+        print(station, ":", len(joint_idx), "/", len(d_idx))
         d = d.loc[joint_idx, ]
         lg_d = lg_d.loc[joint_idx, ]
         zeta = predict_logit(res, mu, sd, lg_d, features)
@@ -235,8 +235,11 @@ def fit_cov_gpd(data, covs, xi0=0.1):
 def fit_cov_gpd_all_stations(station_data, station_names, covs_per_station, xi0=0.1):
     models = {}
     for station in station_names:
+        if isinstance(covs_per_station, dict):
+            covs = covs_per_station[station]
+        else:
+            covs = covs_per_station
         d = station_data[station]
-        covs = covs_per_station.get(station, default = covs_per_station["default"])
         model = fit_cov_gpd(d, covs, xi0)
         models[station] = model.copy()
     return models

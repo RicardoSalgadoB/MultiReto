@@ -8,7 +8,7 @@ from sklearn import metrics
 # U - THRESHOLD
 U = 63.0
 
-R = 24
+R = 2
 
 C = 90.0
 
@@ -196,7 +196,7 @@ def augment_exceedance_data(exceedance_station_data, logit_models, logit_station
         lg_d_idx = set(lg_d.index)
         joint_idx = list(d_idx.intersection(lg_d_idx))
         
-        print(len(joint_idx), "/", len(d_idx))
+        print(station, ":", len(joint_idx), "/", len(d_idx))
         d = d.loc[joint_idx, ]
         lg_d = lg_d.loc[joint_idx, ]
         if isinstance(features, dict):
@@ -398,7 +398,7 @@ def main():
     
     # Complete predictions
     preds_station = {}
-    threshold = 0.65    # 0.6 - 0.65 (recomendado, corregidos) / ~0.15 (no imputados) / 0.02 - 6 horas / 0.25 - 3 horas
+    threshold = 0.6    # 0.6 - 0.65 (recomendado, corregidos) / ~0.15 (no imputados) / 0.02 - 6 horas / 0.25 - 3 horas
     for station in STATIONS:
         test = station_test_data[station]
         test = prepare_test_data(test)

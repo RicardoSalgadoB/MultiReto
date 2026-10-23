@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import statsmodels.api as sm
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.stats.stattools import durbin_watson
+from scipy.stats import expon
 
 try:
     from model_daily import (
@@ -12,7 +13,10 @@ try:
         feature_engineering,
         split_data,
         build_logit_station_data,
-        fit_logit_all_stations
+        fit_logit_all_stations,
+        build_exceedance_data,
+        augment_exceedance_data,
+        fit_cov_gpd_all_stations
     )
 except ModuleNotFoundError:
     import sys
@@ -24,7 +28,10 @@ except ModuleNotFoundError:
         feature_engineering,
         split_data,
         build_logit_station_data,
-        fit_logit_all_stations
+        fit_logit_all_stations,
+        build_exceedance_data,
+        augment_exceedance_data,
+        fit_cov_gpd_all_stations
     )
 
 def validate_logit(res, train, feats, mu, sd, make_plots=False):
@@ -57,10 +64,11 @@ def validate_logit(res, train, feats, mu, sd, make_plots=False):
         bt_terms.append(bt_term_name)
         
     bt_design = sm.add_constant(bt_data)
-    if train["y"].shape[0] < 50:
-        bt_model = sm.Logit(train["y"], bt_design).fit_regularized(method="l1", disp=0)
-    else:
+    if train["y"].shape[0] > 50:
         bt_model = sm.Logit(train["y"], bt_design).fit(disp=0)
+    else:
+        bt_model = sm.Logit(train["y"], bt_design).fit_regularized(method="l1", disp=0)
+        
     
     # Extract p-values for interaction terms (p < 0.05 indicates non-linearity)
     bt_pvalues = bt_model.pvalues[bt_terms]
@@ -144,16 +152,42 @@ def validate_all_logit_models(station_data, logit_models, station_names):
     return validations
 
 
+def residuals(m):
+    beta, xi = m["params"][:-1], m["params"][-1]
+    sigma = np.exp(m["Z"] @ beta)
+    return np.log1p(xi * m["y"] / sigma) / xi
+
+
 def main():
     # General data preparation
-    data = load_data("data/datos_no_imputados.csv")
+    data = load_data("data/datos_corregidos.csv")
     station_data, STATIONS = group_data_by_station(data)
     station_data = feature_engineering(station_data, STATIONS)
     station_train_data, station_test_data = split_data(station_data, STATIONS)
     
     # MODEL 1: Logistic Regression
     logit_station_data = build_logit_station_data(station_train_data, STATIONS)
-    logit_feats = ["x_t", "exc_t", "max24", "n_exc7", "WSR", "TOUT", "RH", "wind_u", "wind_v"]
+    logit_station_data = build_logit_station_data(station_train_data, STATIONS)
+    persistence_feats = ["x_t", "exc_t", "max24", "n_exc7"]
+    meteorological_feats = ["WSR", "TOUT", "RH", "wind_u", "wind_v"]
+    time_feats = ["hour_sin", "hour_cos"]
+    logit_feats = {
+        "CE": persistence_feats + meteorological_feats + time_feats,
+        "NE": persistence_feats + meteorological_feats + time_feats,
+        "NE2": persistence_feats + time_feats,
+        "NE3": persistence_feats + meteorological_feats + time_feats,
+        "NO": persistence_feats + meteorological_feats + time_feats,
+        "NO2": persistence_feats + meteorological_feats + time_feats,
+        "NO3": persistence_feats + time_feats,
+        "NTE": persistence_feats + meteorological_feats + time_feats,
+        "NTE2": persistence_feats + meteorological_feats + time_feats,
+        "SE": persistence_feats + meteorological_feats + time_feats,
+        "SE2": persistence_feats + meteorological_feats + time_feats,
+        "SE3": persistence_feats + meteorological_feats + time_feats,
+        "SO": persistence_feats + time_feats,
+        "SO2": persistence_feats + meteorological_feats + time_feats,
+        "SUR": persistence_feats + meteorological_feats + time_feats,
+    }
     logit_models = fit_logit_all_stations(logit_station_data, STATIONS, logit_feats)
 
     # 2. Run validations
@@ -172,6 +206,52 @@ def main():
     print(f"\nFlagged Outlier Indices: {len(logit_validations["SUR"]['flagged_outliers_indices'])} rows found.")
     print(f"Flagged Outlier Indices (Cook): {len(logit_validations["SUR"]['flagged_cook_indices'])} rows found.")
     print(f"Flagged Outlier Indices (Pearson): {len(logit_validations["SUR"]['flagged_pearson_indices'])} rows found.")
+    
+    # MODEL 2: GPD Model
+    cols = ["WSR", "TOUT", "RH", "PRS", "SR", "hour_sin", "hour_cos", "month_sin", "month_cos", "wind_u", "wind_v"]
+    exceedance_station_data = build_exceedance_data(station_train_data, STATIONS, cols)
+    exceedance_station_data = augment_exceedance_data(exceedance_station_data, logit_models, logit_station_data, STATIONS)
+    met_covs = ["WSR", "TOUT", "RH", "wind_u", "wind_v"]
+    time_covs = ["hour_sin", "hour_cos"]
+    zeta_covs = ["zeta"]
+    covs = {
+        "CE": met_covs+time_covs+zeta_covs,
+        "NE": time_covs+zeta_covs,
+        "NE2": zeta_covs,
+        "NE3": zeta_covs,
+        "NO": time_covs+zeta_covs,
+        "NO2": zeta_covs,
+        "NO3": zeta_covs,
+        "NTE": zeta_covs,
+        "NTE2": met_covs+time_covs+zeta_covs,
+        "SE": met_covs,
+        "SE2": time_covs+zeta_covs,
+        "SE3": time_covs+zeta_covs,
+        "SO": zeta_covs,
+        "SO2": zeta_covs,
+        "SUR": met_covs+time_covs+zeta_covs,
+    }
+    gpd_models = fit_cov_gpd_all_stations(exceedance_station_data, STATIONS, covs)
+    gpd_stat_models = fit_cov_gpd_all_stations(exceedance_station_data, STATIONS, [])
+    
+    for j, station in enumerate(STATIONS):
+        fig, ax = plt.subplots(1, 2, figsize=(10, 4))
+        m0 = gpd_stat_models[station]
+        m1 = gpd_models[station]
+        for m, lab in [(m0, "stationary"), (m1, "covariates")]:
+            e = np.sort(residuals(m))
+            q = expon.ppf((np.arange(1, len(e) + 1) - 0.5) / len(e))
+            ax[0].plot(q, e, "o", ms=3, label=lab)
+        lim = [0, max(q.max(), e.max())]
+        ax[0].plot(lim, lim, "k--"); ax[0].set_xlabel("Exp(1) quantiles")
+        ax[0].set_ylabel("Residual quantiles"); ax[0].legend()
+        ax[1].hist(residuals(m1), bins=20, density=True)
+        ax[1].plot(np.linspace(0, 5), expon.pdf(np.linspace(0, 5)))
+        ax[0].grid()
+        fig.suptitle(station)
+        
+        plt.tight_layout()
+        plt.show()
     
 
 if __name__ == "__main__":
