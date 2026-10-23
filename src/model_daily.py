@@ -8,7 +8,7 @@ from sklearn import metrics
 # U - THRESHOLD
 U = 63.0
 
-R = 24
+R = 5
 
 C = 90.0
 
@@ -398,7 +398,7 @@ def main():
     
     # Complete predictions
     preds_station = {}
-    threshold = 0.65    # 0.6 - 0.65 (recomendado, corregidos) / ~0.15 (no imputados) / 0.02 - 6 horas / 0.25 - 3 horas
+    threshold = 0.44    # 0.6 - 0.65 (recomendado, corregidos) / ~0.15 (no imputados) / 0.02 - 6 horas / 0.25 - 3 horas
     for station in STATIONS:
         test = station_test_data[station]
         test = prepare_test_data(test)
