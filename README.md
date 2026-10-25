@@ -24,10 +24,15 @@ En este proyecto, el único lenguaje de programación utilizado para obtener los
 * `data`: Datos procesados obtenidos tras el procesamiento de los datos originales. Los datos originales de SIMA no se incluyen. También, se incluyen los datos de pronósticos utilizados por el modelo GAM.
 * `graph-neural-network`: Enfoque anterior en el que se utiliza una red neuronal para gragos con el objetivo de predecir la probabilidad de exceso. Se descartó por ser demasiado complejo para los datos disponibles y por carecer de la interpretabilidad requerida en la evaluación del trabajo.
 * `models`: Se guarda el modelo utilizado para la imputación de los datos.
-* `notebooks`: Se incluyen los principales archivos usados para los resultados presentados. Estos incluyen la *regresión logística* y el *GAM* en los archivos `04d_final_logreg_gpd_diaria.ipynb` y `04e_GAM_GPD_diaria.ipynb`.
+* `notebooks`: Se incluyen los principales archivos usados para los resultados presentados. Estos incluyen la *regresión logística* y el *GAM* en los archivos `04d_final_logreg_gpd.ipynb` y `04e_gam_gpd_diaria.ipynb`.
 * `resultados`: Contiene las gráficas generadas en la ejecución del análisis (`.\figuras`) y las tablas de comparaciones para los combinaciones de variables de la regresión logística (`.\tablas`).
-* `src`: Se incluyen varios archivos relativos al modelado de la regresión logística, aunque todas sus funcionalidades ahora están incluidas en los archivos `04c_final_logreg_gpd_horaria.ipynb` y `04d_final_logreg_gpd_diaria.ipynb`.
+* `src`: Se incluyen varios archivos relativos al modelado de la regresión logística, aunque todas sus funcionalidades ahora están incluidas en los archivos `04c_validacion_seleccion_variables_horaria.ipynb` y `04d_validacion_seleccion_diaria.ipynb`.
 * `utils`: Intento preliminar de estandarizar las funciones usadas en todos los notebooks en una estructura única.
+
+### Sobre los datos procesados
+
+No sé pudieron agregar todos los datos procesados, ya que varios de estos archivos superaban el peso máximo requerido por GitHub. Para tener acceso a ellos, se puede usar la siguiente liga para descargarlos: [Datos - Reto SIMA](https://tecmx-my.sharepoint.com/:f:/r/personal/a01282489_tec_mx/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fa01282489%5Ftec%5Fmx%2FDocuments%2FDatos%20%2D%20Reto%20SIMA&share=cgrzmMiJZplYQp6W%2Dcjiz38MEgUCV9GQhwW%2DfOS9RQl4qWj7Zg)
+
 
 ## 3) Requisitos
 
@@ -53,9 +58,8 @@ Una vez se hayan descargado las dependencias, seleccionar el entorno de Python c
 
 Abrir y ejecutar los siguientes *notebooks* para obtener el componente correspondiente.
 
-* **GAM**: `04e_GAM_GPD_diaria.ipynb`
-* **Regresión logística por día**: `04d_final_logreg_gpd_diaria.ipynb`
-* **Regresión logística por hora**: `04c_final_logreg_gpd_horaria.ipynb`. La primera versión de nuestra implementación consideraba una versión horaria, pero se considero más útil para el proyecto desarrollar una versión por día. De cualquier manera se incluye el código de esta primera versión.
+* **GAM por día**: `04e_GAM_GPD_diaria.ipynb`
+* **Regresión logística por día**: `04d_final_logreg_gpd.ipynb`
 
 ## 5) Licencia
 
