@@ -1,6 +1,6 @@
-*.csv
-*.xlsx
+.xlsx
 .venv
+.vscode
 .Rhistory
 .Rprofile
 .RData
@@ -12,3 +12,8 @@ output/
 
 /.quarto/
 __pycache__
+
+data/raw
+data/procesados
+data/pronosticos
+data/outputs_sima/sima_dataset_imputado_completo.csv
