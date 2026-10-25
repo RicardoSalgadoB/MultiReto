@@ -25,7 +25,7 @@ def load_data(filename):
     data["Fecha y hora"] = pd.to_datetime(data["Fecha y hora"])
     
     # Filter data
-    data = data[(data["Fecha y hora"] >= "2023-01-01 00:00:00") & (data["Fecha y hora"] < "2026-01-01 00:00:00")]
+    data = data[(data["Fecha y hora"] >= "2023-01-01 00:00:00")]
     
     # Reset index
     data.set_index("Fecha y hora", inplace=True)
@@ -62,13 +62,13 @@ def feature_engineering(station_data, station_names):
     return station_data
 
 
-def split_data(station_data, station_names):
+def split_data(station_data, station_names, split="2025-01-01 00:00:00"):
     train_data = {}
     test_data = {}
     for station in station_names:
         data = station_data[station]
-        train = data[(data.index < "2025-01-01 00:00:00")]
-        test = data[(data.index >= "2025-01-01 00:00:00")]
+        train = data[(data.index < split)]
+        test = data[(data.index >= split)]
         train_data[station] = train
         test_data[station] = test
     return train_data, test_data
