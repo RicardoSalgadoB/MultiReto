@@ -8,11 +8,12 @@ from sklearn import metrics
 # U - THRESHOLD
 U = 63.0
 
-R = 5
+R = 4
 
 C = 90.0
 
 VARIABLE = "O3"
+
 
 def load_data(filename):
     # Load data
@@ -25,7 +26,7 @@ def load_data(filename):
     data["Fecha y hora"] = pd.to_datetime(data["Fecha y hora"])
     
     # Filter data
-    data = data[(data["Fecha y hora"] >= "2023-01-01 00:00:00") & (data["Fecha y hora"] < "2026-01-01 00:00:00")]
+    data = data[(data["Fecha y hora"] >= "2023-01-01 00:00:00")]
     
     # Reset index
     data.set_index("Fecha y hora", inplace=True)
@@ -65,13 +66,13 @@ def feature_engineering(station_data, station_names):
     return station_data
 
 
-def split_data(station_data, station_names):
+def split_data(station_data, station_names, split="2025-01-01 00:00:00"):
     train_data = {}
     test_data = {}
     for station in station_names:
         data = station_data[station]
-        train = data[(data.index < "2025-01-01 00:00:00")]
-        test = data[(data.index >= "2025-01-01 00:00:00")]
+        train = data[(data.index < split)]
+        test = data[(data.index >= split)]
         train_data[station] = train
         test_data[station] = test
     return train_data, test_data
@@ -87,9 +88,9 @@ def build_logit_data(x, met, u, horizon=1):
     d["x_t"] = x                                   # current level
     d["exc_t"] = (x > u).astype(float)             # exceeded now?
     d["x_lag1"] = x.shift(1)
-    d["x_lag24"] = x.shift(24)
+    # d["x_lag24"] = x.shift(24)
     # d["max24"] = np.log1p(np.log1p(x.rolling(24).max()))            # recent peak
-    d["max24"] = x.rolling(24).max()            # recent peak
+    d["max7"] = x.rolling(7).max()            # recent peak
     # d["n_exc7"] = np.log1p(np.log1p((x > u).astype(float).rolling(7).sum()))   # recent episode activity
     d["n_exc7"] = (x > u).astype(float).rolling(7).sum()   # recent episode activity
 
@@ -192,11 +193,11 @@ def augment_exceedance_data(exceedance_station_data, logit_models, logit_station
         lg_d = logit_station_data[station]
         res, mu, sd, features = logit_models[station]
         
-        d_idx = set(d.index)
-        lg_d_idx = set(lg_d.index)
+        d_idx = set(d.index.astype(str))
+        lg_d_idx = set(lg_d.index.astype(str))
         joint_idx = list(d_idx.intersection(lg_d_idx))
         
-        print(len(joint_idx), "/", len(d_idx))
+        print(station, ":", len(joint_idx), "/", len(d_idx))
         d = d.loc[joint_idx, ]
         lg_d = lg_d.loc[joint_idx, ]
         if isinstance(features, dict):
@@ -234,7 +235,7 @@ def fit_cov_gpd(data, covs, xi0=0.1):
     res = minimize(gpd_nll, res.x, args=(y, Z), method="BFGS")   # polish
 
     return {"params": res.x, "nll": res.fun, "k": len(res.x), "n": len(y),
-            "names": ["intercept"] + covs + ["xi"],
+            "names": ["intercept"] + covs + ["xi"], "indices": data.index,
             "mu": mu, "sd": sd, "Z": Z, "y": y, "covs": covs}
     
     
@@ -280,8 +281,8 @@ def prepare_test_data(data):
     data["x_t"] = x                                   # current level
     data["exc_t"] = (x > U).astype(float)             # exceeded now?
     data["x_lag1"] = x.shift(1)
-    data["x_lag24"] = x.shift(24)
-    data["max24"] = x.rolling(24).max()               # recent peak
+    # data["x_lag24"] = x.shift(24)
+    data["max7"] = x.rolling(24).max()               # recent peak
     data["n_exc7"] = (x > U).astype(float).rolling(7).sum()
     return data
 
@@ -326,11 +327,11 @@ def main():
     station_data = feature_engineering(station_data, STATIONS)
     station_data2 = feature_engineering(station_data2, STATIONS)
     station_train_data, _ = split_data(station_data, STATIONS)
-    _, station_test_data = split_data(station_data2, STATIONS)
+    _, station_test_data = split_data(station_data2, STATIONS, split="2026-01-01 00:00:00")
     
     # MODEL 1: Logistic Regression
     logit_station_data = build_logit_station_data(station_train_data, STATIONS)
-    persistence_feats = ["x_t", "exc_t", "max24", "n_exc7"]
+    persistence_feats = ["x_t", "exc_t", "max7", "n_exc7"]
     meteorological_feats = ["WSR", "TOUT", "RH", "wind_u", "wind_v"]
     time_feats = ["hour_sin", "hour_cos"]
     logit_feats = {
@@ -397,8 +398,8 @@ def main():
     # print(p_c.round(3))
     
     # Complete predictions
-    preds_station = {}
-    threshold = 0.44    # 0.6 - 0.65 (recomendado, corregidos) / ~0.15 (no imputados) / 0.02 - 6 horas / 0.25 - 3 horas
+    preds_station = pd.DataFrame()
+    threshold = 0.3     # 0.6 - 0.65 (recomendado, corregidos) / ~0.15 (no imputados) / 0.02 - 6 horas / 0.25 - 3 horas
     for station in STATIONS:
         test = station_test_data[station]
         test = prepare_test_data(test)
@@ -411,14 +412,42 @@ def main():
         preds["p"] = p_c
         # preds["p"] = preds["p"].shift(-6)
         preds["pred_exc"] = (preds["p"] >= threshold)
-        preds_station[station] = preds
+        preds["estacion"] = station
+        preds_station = pd.concat([preds_station, preds])
 
-    confusion_matrix = metrics.confusion_matrix(preds_station["SUR"]["real_exc"], preds_station["SUR"]["pred_exc"])
+    confusion_matrix = metrics.confusion_matrix(preds_station["real_exc"], preds_station["pred_exc"])
     cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix = confusion_matrix, display_labels = ["No Exceso", "Exceso"])
     cm_display.plot()
+    plt.xlabel("Predicción")
+    plt.ylabel("Valor Real")
+    plt.title("Predicciones por día por estación")
     plt.show()
     
-    fpr, tpr, _ = metrics.roc_curve(preds_station["SUR"]["real_exc"], preds_station["SUR"]["pred_exc"])
+    fpr, tpr, _ = metrics.roc_curve(preds_station["real_exc"], preds_station["pred_exc"])
+    roc_auc = metrics.auc(fpr, tpr)
+    plt.plot(fpr, tpr, label=f'(AUC = {roc_auc:.2f})')
+    plt.plot([0, 1], [0, 1], 'r--', label='Random Guess')
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC Curves for Two Models')
+    plt.legend()
+    plt.show()
+    
+    
+    t2 = 0.5
+    daily = preds_station[["x", "p"]].resample('D').max()
+    daily["real_exc"] = (daily["x"] >= C)
+    daily["pred_exc"] = (daily["p"] >= t2)
+        
+    confusion_matrix = metrics.confusion_matrix(daily["real_exc"], daily["pred_exc"])
+    cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix = confusion_matrix, display_labels = ["No Exceso", "Exceso"])
+    cm_display.plot()
+    plt.xlabel("Predicción")
+    plt.ylabel("Valor Real")
+    plt.title("Predicciones por día")
+    plt.show()
+    
+    fpr, tpr, _ = metrics.roc_curve(daily["real_exc"], daily["pred_exc"])
     roc_auc = metrics.auc(fpr, tpr)
     plt.plot(fpr, tpr, label=f'(AUC = {roc_auc:.2f})')
     plt.plot([0, 1], [0, 1], 'r--', label='Random Guess')

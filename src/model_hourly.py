@@ -25,7 +25,7 @@ def load_data(filename):
     data["Fecha y hora"] = pd.to_datetime(data["Fecha y hora"])
     
     # Filter data
-    data = data[(data["Fecha y hora"] >= "2023-01-01 00:00:00") & (data["Fecha y hora"] < "2026-01-01 00:00:00")]
+    data = data[(data["Fecha y hora"] >= "2023-01-01 00:00:00")]
     
     # Reset index
     data.set_index("Fecha y hora", inplace=True)
@@ -62,13 +62,13 @@ def feature_engineering(station_data, station_names):
     return station_data
 
 
-def split_data(station_data, station_names):
+def split_data(station_data, station_names, split="2025-01-01 00:00:00"):
     train_data = {}
     test_data = {}
     for station in station_names:
         data = station_data[station]
-        train = data[(data.index < "2025-01-01 00:00:00")]
-        test = data[(data.index >= "2025-01-01 00:00:00")]
+        train = data[(data.index < split)]
+        test = data[(data.index >= split)]
         train_data[station] = train
         test_data[station] = test
     return train_data, test_data
@@ -133,7 +133,7 @@ def fit_logit_all_stations(logit_station_data, station_names, features):
             feats = features
         data = logit_station_data[station]
         res, mu, sd = fit_logit(data, feats)
-        models[station] = (res, mu, sd, features)
+        models[station] = (res, mu, sd, feats)
     return models
 
 
@@ -193,7 +193,7 @@ def augment_exceedance_data(exceedance_station_data, logit_models, logit_station
         lg_d_idx = set(lg_d.index)
         joint_idx = list(d_idx.intersection(lg_d_idx))
         
-        print(len(joint_idx), "/", len(d_idx))
+        print(station, ":", len(joint_idx), "/", len(d_idx))
         d = d.loc[joint_idx, ]
         lg_d = lg_d.loc[joint_idx, ]
         zeta = predict_logit(res, mu, sd, lg_d, features)
@@ -235,8 +235,11 @@ def fit_cov_gpd(data, covs, xi0=0.1):
 def fit_cov_gpd_all_stations(station_data, station_names, covs_per_station, xi0=0.1):
     models = {}
     for station in station_names:
+        if isinstance(covs_per_station, dict):
+            covs = covs_per_station[station]
+        else:
+            covs = covs_per_station
         d = station_data[station]
-        covs = covs_per_station.get(station, default = covs_per_station["default"])
         model = fit_cov_gpd(d, covs, xi0)
         models[station] = model.copy()
     return models
