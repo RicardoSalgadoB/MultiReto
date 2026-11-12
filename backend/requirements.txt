@@ -1,0 +1,14 @@
+# API
+fastapi>=0.115
+uvicorn[standard]>=0.30
+numpy>=2.0
+pandas>=2.2
+scipy>=1.13
+
+# Solo para volver a entrenar (source/entrenar.py)
+statsmodels>=0.14
+scikit-learn>=1.5
+
+# Pruebas
+pytest>=8
+httpx>=0.27
