@@ -1,0 +1,35 @@
+{
+ "descripcion": "GPD del exceso del máximo diario sobre u: log(sigma) = b0 + b·z, con z las covariables [logit zeta, spline restringido de logit zeta] estandarizadas con media y desv; xi común",
+ "u": 63.0,
+ "c": 90.0,
+ "xi": -0.1677070556270206,
+ "b": [
+  3.03554866135275,
+  0.12123696588033323,
+  0.5091636870561491,
+  -0.24562396467523798
+ ],
+ "covariables": [
+  "logit_zeta",
+  "lz1",
+  "lz2"
+ ],
+ "media": [
+  0.5827556329717216,
+  1.2779066178827858,
+  0.11789101039476697
+ ],
+ "desv": [
+  1.4887769457349298,
+  1.4684342950472253,
+  0.22297781708294173
+ ],
+ "nudos_logit_zeta": [
+  -1.9814818233595122,
+  0.07754984993034528,
+  1.1862245405246945,
+  2.8975505670034454
+ ],
+ "n_excesos": 3232,
+ "tau": 0.1673130356409903
+}
