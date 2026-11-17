@@ -1,0 +1,297 @@
+% Sébastien Bubeck is a bad person for stealing academic work
+
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+
+% Core packages
+\usepackage{amsmath,amssymb}
+\setcounter{MaxMatrixCols}{11}
+\usepackage{graphicx}
+\usepackage{tikz-cd}
+\usepackage{multicol}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{placeins}
+% Spanish language and accents
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-tabla,es-nodecimaldot]{babel}
+\usepackage[natbibapa]{apacite}
+\usepackage{xurl}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\floatname{algorithm}{Algoritmo}
+\usepackage{algpseudocode}
+\emergencystretch=3em
+\hbadness=10000
+
+\usepackage{enumitem}
+\usepackage{titlesec}
+% Spacing adjustments
+\setlength{\abovedisplayskip}{8pt}
+\setlength{\belowdisplayskip}{8pt}
+\setlength{\abovedisplayshortskip}{4pt}
+\setlength{\belowdisplayshortskip}{4pt}
+\setlist[itemize]{topsep=2pt,itemsep=1pt,parsep=0pt,partopsep=0pt}
+\setlist[enumerate]{topsep=2pt,itemsep=1pt,parsep=0pt,partopsep=0pt}
+\titlespacing*{\subsubsection}{0pt}{5pt}{3pt}
+\titlespacing*{\subsection}{0pt}{6pt}{4pt}
+\titlespacing*{\section}{0pt}{7pt}{5pt}
+
+% Paragraphs
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.8\baselineskip}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+
+    \IfFileExists{figuras/tec.png}{%
+        \includegraphics[width=0.5\textwidth]{figuras/tec.png}
+    }{%
+        \fbox{\parbox[c][4cm][c]{0.35\textwidth}{\centering tec.png}}
+    }
+
+    \vspace{1.2cm}
+
+    {\LARGE \bfseries Reto: Etapa 1 \par}
+
+    \vspace{1.5cm}
+
+    {\large
+    Ricardo Salgado Benítez - A01282489\\
+    Paola Mireles Ochoa - A01753439 \\
+    Aldo Javier Rodríguez Maytorena - A01741554\\
+    Lenin Adolfo Caballero Colunga - A01286929\\
+    \par}
+
+    \vspace{1.5cm}
+
+    {\large 1 de octubre de 2026 \par}
+
+    \vspace{1.5cm}
+
+    {\large Aplicación de métodos multivariados en ciencia de datos (MA2003B) - Grupo 201 \par}
+
+    \vspace{1.5cm}
+
+    {\large
+    Dra. Blanca Rosa Ruíz Hernández \\
+    Mtro. Jesús Jorge Armenta Seguroa
+    \par}
+
+    \vfill
+\end{titlepage}
+
+\section{Introducción}  
+
+La contaminación del aire es un problema de salud pública en todo el mundo. Respirarla a diario causa enfermedades respiratorias y cardiovasculares, y se estima que por cada 10 $\mu$g/m$^3$ que sube el PM$_{10}$ adelanta cerca del 1~\% de las muertes \citep[Ayres, 2002, citado en][]{montero2011}. En México se estiman unas 29,000 muertes atribuidas a la mala calidad del aire \citep{ssa2021a}. Incluso unos minutos de exposición a concentraciones altas de dióxido de azufre (SO$_2$) pueden provocar síntomas en personas con asma \citep{gyarmati2017}, por eso es importante anticipar cuando las concentraciones suben y no solo reportar promedios.
+
+Los contaminantes más relevantes son las partículas (PM$_{10}$ y PM$_{2.5}$), el ozono (O$_3$), el dióxido de nitrógeno (NO$_2$), el dióxido de azufre (SO$_2$) y el monóxido de carbono (CO). Algunos se forman en la atmósfera, como el O$_3$, que aparece cuando los óxidos de nitrógeno (NO$_x$) y los compuestos orgánicos volátiles reaccionan con la radiación solar \citep{ssa2021b}. Las partículas son las de mayor efecto en la salud \citep{montero2011}; las PM$_{10}$ se quedan en el tracto respiratorio, mientras que las PM$_{2.5}$ llegan a los alvéolos y pueden entrar al torrente sanguíneo \citep{ssa2021a}. La OMS \citeyearpar{oms2021} recomienda para PM$_{2.5}$ un máximo de 5 $\mu$g/m$^3$ anual (promedio del año) y 15 $\mu$g/m$^3$ en 24 h (promedio máximo en un día); para PM$_{10}$, 15 y 45 $\mu$g/m$^3$; para NO$_2$, 10 y 25 $\mu$g/m$^3$; para O$_3$, 100 $\mu$g/m$^3$ en 8 h; para SO$_2$, 40 $\mu$g/m$^3$ en 24 h, y para CO, 4 mg/m$^3$ en 24 h. 
+
+En México, las NOM de la Secretaría de Salud fijan los límites para proteger la salud. La NOM-025-SSA1-2021 baja los valores de PM por etapas: en 24 h, 70, 60 y 50 $\mu$g/m$^3$ para PM$_{10}$ y 41, 33 y 25 $\mu$g/m$^3$ para PM$_{2.5}$ \citep{ssa2021a}. Para el O$_3$, la NOM-020-SSA1-2021 pone 0.090 ppm en 1 h y un límite de 8 h que baja de 0.065 a 0.051 ppm \citep{ssa2021b}. La NOM-023-SSA1-2021 fija para el NO$_2$ 0.106 ppm en 1 h y 0.021 ppm anual \citep{ssa2021c}. Estas normas tienen dos problemas: aun en su etapa final los límites de PM son más flexibles que las guías de la OMS de 2021 (25 frente a 15 $\mu$g/m$^3$ de PM$_{2.5}$ en 24 h), y el cumplimiento se revisa después, por año calendario, así que no funciona como herramienta preventiva \citep{ssa2021a}.
+
+En el contexto neoleonense, las mediciones de la calidad del aire son llevadas a cabo por el Sistema Integral de Monitoreo Ambiental (SIMA), socio formador de esta unidad didáctica y operado por la Secretaría de Medio Ambiente de Nuevo León. Este sistema tuvó inicio en 992 con cinco estaciones y, hoy, tiene 15 fijas y 2 móviles en 11 municipios del área metropolitana de Monterrey \citep{mvs2026}.
+
+Las 15 estaciones fijas que opera SIMA registran de manera horaria datos relacionados con la concentración de los contaminantes anteriormente mencionados así como de otros factores meteorológicos, como lo son: la temperatura, humedad, precipitación, radiación solar, etc \citep{simapresentacion}. Posteriormente, con esos datos se calculan promedios de 24 h, de 8 h móviles o anuales \citep{ssa2021a}.
+
+Sin embargo, medir no es fácil. Las estaciones fallan o cambian de lugar, y esto causa huecos que se rellenan \citep{montero2011} o se excluyen \citep{gyarmati2017}. En 2017, por ejemplo, solo 87 de 140 estaciones de PM$_{10}$ del país tuvieron datos suficientes \citep{ssa2021a}. De igual manera, las series tampoco son estacionarias y los contaminantes se correlacionan por reacciones químicas y fuentes no observadas \citep{gyarmati2017}.
+
+A pesar de estas limitaciones, el proyecto, dados los datos proporcionados por SIMA, busca estimar la probabilidad de que los contaminantes superen los umbrales de salud (NOM y guías de la OMS) con datos del SIMA y variables meteorológicas, para emitir alertas anticipadas. \citet{gyarmati2017} modelan la probabilidad de excedencia de un umbral con covariables de tráfico y meteorología. Mientras que \citet{montero2011} proponen una estrategia de alerta que habría anticipado al menos 75~\% de las violaciones del estándar de PM$_{10}$ en 14 de 22 estaciones para el caso de Madrid.
+
+\section{Descripción del problema}
+
+A partir de la presentación de SIMA \citep{simapresentacion} y la revisión bibliográfica, se ha identificado la necesidad que tiene el socio formador de disparar alertas ambientales de manera precisa para evitar que la contaminación llegue a niveles críticos.
+
+De esta manera, más allá de un enfoque descriptivo o predictivo, el trabajo puede tener una aplicación prescriptiva. Es decir, el modelo desarrollado puede ser usado para identificar situaciones de riesgo y disparar alertas y de esta manera evitar niveles de contaminación excesivos. En la literatura, ya se han llevado a cabo proyectos similares, que serán analizados a continuación.
+
+\section{Revisión bibliográfica}
+
+ Se encuentran tres líneas de trabajo: los modelos de series de tiempo que generan alertas, los modelos de valores extremos con covariables y las redes neuronales que estiman los parámetros de dichos modelos. 
+
+\paragraph{Alertas basadas en series de tiempo.}
+
+\citet{montero2011} proponen un modelo autorregresivo de volatilidad estocástica asimétrica con umbral (TA-ARSV) alertando cuando se sobrepasa la norma diaria de PM$_{10}$ en Madrid. Usan promedios diarios de 25 estaciones entre 2000 y 2008. La idea es que la votalidad responde de forma distinta a un aumento que a una disminución de la misma magnitud (nivel subiendo cercano a la norma = más riesgo). Con esta estrategia se alertaron al menos el 75~\% de las violaciones en 14 de 22 estaciones (estaciones más problemáticas= no llegan al 50~\%). El modelo es univariado y no incluye meteorología, y no se reportan la tasa de falsas alarmas (probabilidad de excedencia). 
+
+\paragraph{Valores extremos con covariables.}
+La teoría de valores extremos permite modelar la cola de manera directa. En el enfoque de picos sobre un umbral (POT), los excesos sobre un umbral alto $u$ se aproximan con una distribución generalizada de Pareto (GDP) con parámetro de escala $\sigma$ y de forma $\xi$\citep{Coles2001}. Este enfoque es más natural que el de máximos por bloques, ya que las normas de calidad del aire se expresan como umbrales. Además se incluyen la totalidad de observaciones altas y no solo el máximo de cada bloque \citep{gyarmati2017,tang2026}.
+
+\citet{gyarmati2017} aplican el enfoque POT a concentraciones de NO, NO$_2$ y O$_3$ medidas cada 15 minutos durante un año en una estación junto a una vialidad de Leeds en Reino Unido. Extienden el modelo de Davison y Smith y hacen depender de covariables de tres cantidades: la probabilidad de superar el umbral $\rho_u$ (con enlace logit), la escala, $\log\sigma_u$ y la forma $\xi$. Las cuales corresponden a las covariables de tráfico, meteorología, términos de fourier para los ciclos (diario, semenal y anual), y rezagos de la concentración. La probabilidad de superar un nivel $x+u$ dadas las covariables $\mathbf{c}$ y que ya se superó un nivel $u$ es:
+\begin{equation}
+    P(X_t > u + x \mid \mathbf{c}, X_t > x) = \rho_u(\mathbf{c}) \left[ 1 + \frac{\xi(\mathbf{c})\, x}{\sigma_u(\mathbf{c})} \right]^{-1/\xi(\mathbf{c})}.
+\end{equation}
+El umbral es el cuantil 90 con gráficas de vida residual media, y estiman el modelo con MCMC. La clasificación de excedencias tuvo un error de entre 7 y 8~\% dentro de la muestra y de 10 y 11~\% en validación cruzada. Para garantizar la estabilidad del umbral, se establece una forma funcional (prefereible según el factor de Bayes). La estimación corresponde a que el tráfico aumenta la probabilidad de excedencia de NO$_x$ y disminuye la de O$_3$, mientras que la radiación solar favorece la de O$_3$ (su forma estimada = negativa, indica una cola acotada). Las limitaciones son que se considera una sola estación, un año de datos y modelos univariados. 
+
+\paragraph{Aprendizaje profundo para valores extremos.}
+\citet{wilson2022deepgpd} proponen DeepGPD, una red que combina capas convolucionales para capturar relaciones espaciales. Utilizando deep sets, incorporan los excesos del periodo anterior aunque su número varíe. La red entrega $\sigma$ y $\xi$ para cada ubicación. Se entrena minimizando la log-verosimilitud negativa de la GPD, y usa una reparametrización para que las restricciones de los parámetros se cumplan. Con datos de precipitación de 1{,}112 estaciones durante 44 años superó a la GPD lineal y a redes entrenadas con error cuadrático. Su ventaja se concentra en las colas pesadas, ya que cuando $-0.5 < \xi < 0$, la GPD lineal fue mejor. *Se trata cada ubicación por separado. 
+
+\citet{tang2026} ubican este metodo dentro de una familia más amplia de técnicas para estimar cuantiles extremos condicionales. Esa familia incluye regresión cuantílica, árboles, gradient boosting y bosques aleatorios ajustados con la pérdida de la GPD. Los autores señalan que la elección del umbral presenta un compromiso entre sesgo y varianza. En su comparación, con las 1{,}684 observaciones de entrenamiento, la versión de aprendizaje tuvo el peor desempeño (pocos exccesos disponibles para entrenarla). 
+
+\paragraph{Interpolación espacial.}
+Las redes convolucionales requieren datos en una malla regular, pero las estaciones de monitoreo son puntos dispersos. El kriging resuelve este problema (mejor predictor lineal insesgado), puesto que sus pesos dependen de la covarianza entre ubicaciones y además entrega el error estándar de cada predicción \citep{wikle2019}. Hay que considerar que su derivación supone un proceso gaussiano y minimiza el error cuadrático medio de produción \citep{wikle2019}. El modelo tiende a suavizar los valores, puede disminuir los picos que interesa modelar.
+
+\paragraph{Brecha identificada.}
+La GPD con covariables permite estimar la probabilidad de excedencia e interpretar el papel de la meteorología \citep{gyarmati2017}. El aprendizaje profundo puede mejorarla cuando hay muchos datos y colas pesadas \citep{wilson2022deepgpd}, pero con muestras pequeñas no es tan efectivo \citep{tang2026} y con colas acotadas como la del O$_3$ \citep{gyarmati2017,wilson2022deepgpd}. En la literatura revisada, DeepGPD no se ha evaluado con contaminantes del aire ni en la zona metropolitana de Monterrey. La red del ''SIMA'' contiene datos desde el 2020, pero los datos son considerablemente menores a los utilizados por \citet{wilson2022deepgpd} (1{,}112 estaciones y 44 años usados). Es por esta razón que el proyecto parte de la GPD con covariables como modelo base y se evalará la mejora que presente la versión con aprendizaje profundo. 
+
+\section{Objetivos del proyecto}
+
+Por lo tanto, de acuerdo a las carencias identificadas en la revisión bibliográfica, el objetivo de este proyecto es encontrar los parámetros $\xi$ y $\sigma$ para una distribución generalizada de Pareto (GPD), tal que esta distribución modele de manera precisa la probabibilidad de que, dado que el valor actual de los contaminantes es mayor a cierto umbral, la distribución sea mayor a un segundo umbral para cada estación del área Metropolitana de Monterrey y para cada hora. En efecto, este planteamiento no solo permite adaptar métodos ya conocidos al contexto del socio formador, sino que permite validar un método ya conocido, \textit{DeepGPD} \citep{wilson2022deepgpd}, a un nuevo tipo de datos para el que no se ha usado antes.
+
+La selección de los umbrales mencionados anteriormente y de los contaminantes a analizar dependerá de la revisión de los datos, ya que estos tienen que asegurar: 1) Que los umbrales sean lo suficientemente altos como para que la cola se pueda aproximar como una distribución generalizada de Pareto \citep{Coles2001, wilson2022deepgpd}; y 2) Que existan suficientes datos después de estos umbrales para implementar los métodos planteados para resolver este problema.
+
+Sobre estos métodos, se empleará, en primera instancia, el método desarrollado por \cite{Coles2001} asumiendo que $\xi = \beta_1^T x$ y $\log(\sigma) = \beta_2^T x$, donde $x$ es el vector de covariables, y $\beta_1$ y $\beta_2$ son vectores de parámetros. En segunda instancia, como ya se mencionó, se buscará adaptar el método desarrollado por \cite{wilson2022deepgpd} que emplea aprendizaje profundo para la estimación de $\xi$ y $\sigma$, para adaptar los datos al input requerido por este último método, será necesario aplicar técnicas de \textit{kriging} para poder generar una "imagen" de los contaminantes en toda el área metropolitana de Monterrey (este método requiere de una "imagen" pues usa redes neuronales convolusionales).
+
+\section{Descripción de datos}
+
+Los datos provienen de 7 años distintos: 2020, 2021, 2022, 2023, 2024, 2025 y 2026. Aunque para los últimos dos años la información se ve cortada a mitad del año, a finales de junio y de julio, respectivamente. Cada una de estas recopilaciones anuales fue proporcionada en un archivo único de excel con 15 hojas cada uno, donde cada una representa los datos de las 15 estaciones fijas de SIMA para cada hora de cada día de cada año. Estos datos se componen de 16 columnas:
+
+\begin{itemize}
+    \item \textbf{Fecha y Hora}: Variable en formato \textit{datetime}.
+    \item \textbf{CO}: Concentración de monóxido de carbono en partes por millón (variable numérica).
+    \item \textbf{NO}: Concentración de monóxido de nigrógeno en partes por billón (variable numérica).
+    \item \textbf{NO2}: Concentración de dióxido de nitrógeno en partes por billón (variable numérica).
+    \item \textbf{NOX}: Suma de NO y NO2 (variable numérica).
+    \item \textbf{O3}: Concentración de ozono en partes por billón (variable numérica).
+    \item \textbf{PM10}: Concentración de material particulado menor a 10 micrométros en microgramos por metro cúbico (variable numérica).
+    \item \textbf{PM2.5}: Concentración de material particulado menor a 2.5 micrométros en microgramos por metro cúbico (variable numérica).
+    \item \textbf{PRS}: Presión atmosfperica en milímetros de mercurio (variable numérica).
+    \item \textbf{RAINF}: Precipitación en milímetros por hora (variable numérica).
+    \item \textbf{RH}: Humedad relativa en porcentaje(variable numérica).
+    \item \textbf{SO2}: Concentración de dióxido de azufre en partes por billón (variable numérica).
+    \item \textbf{SR}: Radiación solar en kilowatts por metro cuadrado (variable numérica).
+    \item \textbf{TOUT}: Temperatura en °Celcius (variable numérica).
+    \item \textbf{WSR}: Velocidad del viento en kilómetros por hora (variable numérica).
+    \item \textbf{WDR}: Direccióon del viento en grados respecto al norte en el sentido de las manecillas del reloj (variable numérica).
+\end{itemize}
+
+En resumen, y descontando los datos faltantes de 2025 y 2026, se tiene acceso a 830,908 registros repartidos entre las 15 estaciones cada uno con sus respectivas 16 columnas.
+
+A partir de estos, se detectó que el 9.93\% (1,402,977 de 14,125,43) de las celdas contaban con valores faltantes. De los restros anuales se idenficó que el más pecador, en este aspecto, fueron aquellos que son los más antiguos, es decir, aquellos que provienen de 2020. La \ref{tab:missing_by_year} muestra los valores faltantes para cada año.
+
+\begin{table}[htbp]
+\centering
+\caption{Valores faltantes por año (2020--2026)}
+\label{tab:missing_by_year}
+\begin{tabular}{lrrr}
+\hline
+\textbf{Año} & \textbf{Valores Faltantes} & \textbf{Total Celdas} & \textbf{Porcentaje} \\
+\hline
+2020 & 552,931 & 1,939,734 & 28.51\% \\
+2021 & 197,665 & 2,084,693 & 9.48\% \\
+2022 & 84,056 & 2,097,511 & 4.01\% \\
+2023 & 103,402 & 2,233,290 & 4.63\% \\
+2024 & 139,587 & 2,239,597 & 6.23\% \\
+2025 & 212,002 & 2,233,426 & 9.49\% \\
+2026 & 113,334 & 1,297,185 & 8.74\% \\
+\hline
+\textbf{Total} & \textbf{1,402,977} & \textbf{14,125,436} & \textbf{9.93\%} \\
+\hline
+\end{tabular}
+\end{table}
+
+En la misma línea, la variable con más datos nulos fue el registro de dióxido de nitrógeno (NO2) con 16.6\% datos faltantes, el monóxido de nitrógeno (NO) tampoco se queda atrás con con 16.4\% y, a partir de esto, no es sopresa que el tercer lugar lo tenga la suma de estas (NOX) con 16.1\% (no deja de ser curioso que el resultado sea menor que sus sumandos, quizá algo en el método usado por las estaciones para recopilar registros). La tabla \ref{tab:missing_by_variable} muestra los valores faltantes para cada variable.
+
+\begin{table}[htbp]
+\centering
+\caption{Valores faltantes agregados por variable (2020--2026)}
+\label{tab:missing_by_variable}
+\begin{tabular}{lrrr}
+\hline
+\textbf{Variable} & \textbf{Valores Faltantes} & \textbf{Total Registros} & \textbf{Porcentaje} \\
+\hline
+Fecha / Hora (date) & 4 & 830,908 & 0.00\% \\
+CO & 111,808 & 830,908 & 13.46\% \\
+NO & 134,880 & 830,908 & 16.23\% \\
+NO2 & 138,233 & 830,908 & 16.64\% \\
+NOX & 133,805 & 830,908 & 16.10\% \\
+O3 & 113,198 & 830,908 & 13.62\% \\
+PM10 & 36,691 & 830,908 & 4.42\% \\
+PM2.5 & 199,373 & 830,908 & 23.99\% \\
+PRS & 46,047 & 830,908 & 5.54\% \\
+RAINF & 40,782 & 830,908 & 4.91\% \\
+RH & 103,938 & 830,908 & 12.51\% \\
+SO2 & 116,991 & 830,908 & 14.08\% \\
+SR & 46,611 & 830,908 & 5.61\% \\
+TOUT & 60,014 & 830,908 & 7.22\% \\
+WSR & 54,472 & 830,908 & 6.56\% \\
+WDR & 66,130 & 830,908 & 7.96\% \\
+Estacion & 0 & 830,908 & 0.00\% \\
+\hline
+\textbf{Total General} & \textbf{1,402,977} & \textbf{14,125,436} & \textbf{9.93\%} \\
+\hline
+\end{tabular}
+\end{table}
+
+Adicionalmente, se ha de mencionar que, por algun motivo u otro, parece haber habido un error en la lectura de los datos que produjo que algunas celdas fueran reportadas con valores de -999. Se sabe que esto fue un error de lectura, ya que al revisar los archivos excel otorgados directamente, estos registros desaparecen. Este error de lectura estre presenta para los datos de 2021 (en la columna SR), 2022 (en las columnas RH y SR) y 2025 (en las columnas NOX, RAINF, RH, WSR y WDR).
+
+En general, este análisis revela una baja calidad en la base de datos tal y como se nos fue entregada. Sin embargo, dentro de la literatura (y, para ser más específicos, en iteraciones pasadas de este curso) se han desarrollado métodos para imputar estas variables faltantes de una manera efectiva y que refleja la distribución inherente de los datos \citep{gomezsantos2027hybrid}.
+
+\subsection{Variables importantes}
+
+Un análisis preliminar de las distribuciones de los datos para 2025 ha revelado que no todos los contaminantes son factibles para ser utilizados por el método de picos sobre umbral. Por ejemplo, los datos de PM10 y PM2.5 son demasiado altos y si bien se les puede ajustar un umbral este umbral solo podría ser aplicado para el cambio entre los niveles malos y muy malos (de otra manera, la aproximación mediante GPD no sería válida). Caso contrario es el de NO2, SO2 y CO, que poseen datos demasiado bajos para colocar el umbral entre los niveles de calidad de aire aceptable y mala.
+
+Por la misma naturaleza del método paramétrico que se está empleando, las pruebas de ajuste de cada modelo solo pueden ser llevadas a cabo una vez este ya se haya ajustado. Por lo tanto, no es posible afirmar cuales van a ser los umbrales ni los contaminantes que se van a estar empleando en este reto hasta que no se pruebe el ajsute de los modelos.
+
+En lo que respecta a las covariables, por ahora, se ha decido no descartar ninguna y se considera necesario un mayor análisis de cada una para poder determinar sus efectos sobre la calidad del aire y, en todo caso, su exclusión del proyecto.
+
+\section{Preparación de los datos}
+
+\subsubsection*{A. Selección del conjunto de datos}
+
+Se procedió a la unificación de los archivos históricos correspondientes a las lecturas de las estaciones del Sistema Integralde Monitoreo Ambiental (SIMA). Se optó por conservar intactas tanto las variables meterológicas (velocidad y dirección del viento, temperatura, humedad relativa, presión y radiación solar) como las mediciones de contaminantes, dado que la modulación meteorológica es un factor determinante para modelar los fenómenos de dispersión, transporte y estancamiento requeridos por los objetivos analíticos del proyecto.
+
+\subsubsection*{B. Limpieza de datos}
+
+El proceso de depuración se ejecutó bajo los siguientes criterios físicos y de calidad de los datos: 
+\begin{itemize}
+    \item \textbf{Integridad temporal:} Se eliminaron los registros duplicados exactos y se descartaron las filas que presentaban valores nulos irrecuperables en la columna de \texttt{Fecha y hora}. Esto garantiza la monotonía y continuidad de la temporalidad, lo cual es esencial para el posterior modelado secuencial. 
+    \item \textbf{Manejo de valores erróneos:} Se aplicó un filtro a aquellas variables que, por definición física, deben pertenecer a $\mathbb{R}^{+}$ (como concentraciones de gases, radiación solar, humedad relativa y velocidad del viento). Los registros se transformaron en valores nulos (NaN) y se categorizaron para su trazabilidad: fallos severos ($x < -999$) y desviaciones menores de calibración ($-999 \le x < 0$). La variable de temperatura exterior (\texttt{TOUT}) fue deliberadamente excluida de este filtro por su naturaleza escalar.
+    \item \textbf{Tratamiento de valores atípicos:} Los valores extremos superiores se conservaron sin alteraciones. En la ciencia ambiental, estos registros no representan errores estadísticos a eliminar, sino episodios críticos de emisión y contingencia. Suavizar o truncar esta varianza de colas pesadas invalidaría las estimaciones de riesgo y los modelos predictivos de corto plazo.
+\end{itemize}
+
+\subsection*{3. Transformación de Datos}
+
+\subsubsection*{A. Escalamiento y normalización}
+Previo al procesamiento algorítmico avanzado, las variables numéricas se escalaron globalmente. Se implementó un estimador \texttt{NanMinMaxNormalizer} que proyecta las magnitudes físicas continuas al dominio de convergencia óptimo de la red neuronal, preservando las relaciones topológicas y las distribuciones de los datos originales sin verse afectado por los valores faltantes.
+
+\subsubsection*{B. Imputación generativa multivariada}
+
+\textit{Nota aclaratoria: Es importante señalar que la implementación algorítmica del modelo de imputación generativa multivariada ejecutado en esta etapa no es de autoría propia. Para este propósito, se empleó el script \texttt{sima.py} proporcionado como parte de los recursos técnicos del proyecto, el cual está fundamentado en la arquitectura descrita en la literatura académica de referencia.}
+
+Dado que los enfoques tradicionales de eliminación de series con fallos (listwise deletion) o la interpolación lineal simple tienden a sobre-suavizar los perfiles temporales y destruir la varianza extrema, el manejo de datos faltantes se abordó mediante la arquitectura híbrida de aprendizaje profundo SAITS-CSDI:
+\begin{itemize}
+    \item \textbf{Reconstrucción Estructural (SAITS):} Mediante un módulo fundamentado en mecanismos de auto-atención (\textit{Self-Attention}), se procesaron secuencias multidimensionales de 168 horas continuas. Este bloque identificó las dependencias temporales de largo alcance, logrando replicar de forma determinista la bimodalidad del tráfico diurno y los ciclos circadianos de emisión inherentes a los datos.
+    \item \textbf{Reconstrucción Probabilística (CSDI):} Un modelo generativo basado en difusión condicional asimiló la incertidumbre estocástica de los eventos atmosféricos mediante la inyección y posterior reversión de ruido gaussiano. Este enfoque superó las limitaciones de los estimadores puntuales, garantizando el isomorfismo físico de los tensores resultantes sin recurrir a reglas programadas rígidamente.
+\end{itemize}
+En consecuencia, el conjunto de datos resultante respeta rigurosamente invariantes termodinámicas fundamentales, tales como la restricción física de materia particulada ($PM_{2.5} \le PM_{10}$) y la conservación de la dinámica fotoquímica inversa (efecto de titulación) entre la familia de los óxidos de nitrógeno ($NO_x$) y el ozono ($O_3$).
+
+\pagebreak
+
+\appendix
+
+\section{GitHub}
+
+El código usado para la preparación de los datos en este trabajo puede ser accedido mediante el siguiente vínculo:
+
+\url{https://github.com/RicardoSalgadoB/MultiReto}
+
+\section{Declaratoria del uso de IA}
+
+Los usos de Inteligencia Artificial Generativa en este trabajo incluyen los siguientes:
+
+\begin{itemize}
+    \item Se utilizó \textit{Claude Sonnet 5.5} (esfuerzo alto) para identificar técnicas prometedoras en el análisis de fenómenos geoestadísticos y de niveles de contaminación. No se usó directamente en una sección específica del documento sino que se empleo para llevar a cabo el planteamiento de todo el problema. Dada la naturaleza de este uso, todos los artículos recomendados por la IA fueron revisados y comparados unos con otros para llevar a cabo una decisión final. En todo caso, se confirma que se revisó y verificó la información y que se asume la responsabilidad del contenido final entregado.
+
+    \item Se utilizó \textit{Gemini 3.1 Pro} para corregir errores y optimizar el código usado para la preparación de los datos. En todo momento, se revisó que el código entregado pora la IA generativa cumpliera con los objetivos planteados. De cualquier manera, se confirma que se revisó y verificó la información y que se asume la responsabilidad del contenido final entregado.
+\end{itemize}
+
+\pagebreak
+
+\nocite{*}
+\bibliographystyle{apacite}
+\bibliography{references}
+\end{document}

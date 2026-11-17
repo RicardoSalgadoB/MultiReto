@@ -1,0 +1,849 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2026.9.29)  17 NOV 2026 09:17
+entering extended mode
+ restricted \write18 enabled.
+ file:line:error style messages enabled.
+ %&-line parsing enabled.
+**/Users/ricardosalgadob/Desktop/Multivariados/MultiReto/reporte/poster/poster.tex
+(/Users/ricardosalgadob/Desktop/Multivariados/MultiReto/reporte/poster/poster.tex
+LaTeX2e <2025-11-01>
+L3 programming layer <2026-01-19>
+(/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/tikzposter/tikzposter.cls
+Document Class: tikzposter 2014/01/15 v2.0 LaTeX document class for Posters
+(/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/xkeyval/xkeyval.sty
+Package: xkeyval 2025/11/04 v2.10 package option processing (HA)
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/xkeyval/xkeyval.tex (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/xkeyval/xkvutils.tex
+\XKV@toks=\toks17
+\XKV@tempa@toks=\toks18
+\XKV@tempb@toks=\toks19
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/xkeyval/keyval.tex))
+\XKV@depth=\count275
+File: xkeyval.tex 2014/12/03 v2.7a key=value parser (HA)
+)) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/tools/calc.sty
+Package: calc 2025/03/01 v4.3b Infix arithmetic (KKT,FJ)
+\calc@Acount=\count276
+\calc@Bcount=\count277
+\calc@Adimen=\dimen148
+\calc@Bdimen=\dimen149
+\calc@Askip=\skip49
+\calc@Bskip=\skip50
+LaTeX Info: Redefining \setlength on input line 86.
+LaTeX Info: Redefining \addtolength on input line 87.
+\calc@Ccount=\count278
+\calc@Cskip=\skip51
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/base/ifthen.sty
+Package: ifthen 2024/03/16 v1.1e Standard LaTeX ifthen package (DPC)
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/ae/ae.sty
+Package: ae 2001/02/12 1.3 Almost European Computer Modern
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/base/fontenc.sty
+Package: fontenc 2025/07/18 v2.1d Standard LaTeX package
+)) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/xstring/xstring.sty (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/xstring/xstring.tex
+\xs_counta=\count279
+\xs_countb=\count280
+)
+Package: xstring 2023/08/22 v1.86 String manipulations (CT)
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/etoolbox/etoolbox.sty
+Package: etoolbox 2025/10/02 v2.5m e-TeX tools for LaTeX (JAW)
+\etb@tempcnta=\count281
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/pgf/frontendlayer/tikz.sty (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/pgf/basiclayer/pgf.sty (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/pgf/utilities/pgfrcs.sty (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/utilities/pgfutil-common.tex
+\pgfutil@everybye=\toks20
+\pgfutil@tempdima=\dimen150
+\pgfutil@tempdimb=\dimen151
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/utilities/pgfutil-latex.def
+\pgfutil@abb=\box53
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/utilities/pgfrcs.code.tex (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/pgf.revision.tex)
+Package: pgfrcs 2025-08-29 v3.1.11a (3.1.11a)
+))
+Package: pgf 2025-08-29 v3.1.11a (3.1.11a)
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/pgf/basiclayer/pgfcore.sty (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/graphics/graphicx.sty
+Package: graphicx 2024/12/31 v1.2e Enhanced LaTeX Graphics (DPC,SPQR)
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/graphics/graphics.sty
+Package: graphics 2024/08/06 v1.4g Standard LaTeX Graphics (DPC,SPQR)
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/graphics/trig.sty
+Package: trig 2023/12/02 v1.11 sin cos tan (DPC)
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/graphics-cfg/graphics.cfg
+File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
+)
+Package graphics Info: Driver file: pdftex.def on input line 106.
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/graphics-def/pdftex.def
+File: pdftex.def 2025/09/29 v1.2d Graphics/color driver for pdftex
+))
+\Gin@req@height=\dimen152
+\Gin@req@width=\dimen153
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/pgf/systemlayer/pgfsys.sty (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/systemlayer/pgfsys.code.tex
+Package: pgfsys 2025-08-29 v3.1.11a (3.1.11a)
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/utilities/pgfkeys.code.tex
+\pgfkeys@pathtoks=\toks21
+\pgfkeys@temptoks=\toks22
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/utilities/pgfkeyslibraryfiltered.code.tex
+\pgfkeys@tmptoks=\toks23
+))
+\pgf@x=\dimen154
+\pgf@y=\dimen155
+\pgf@xa=\dimen156
+\pgf@ya=\dimen157
+\pgf@xb=\dimen158
+\pgf@yb=\dimen159
+\pgf@xc=\dimen160
+\pgf@yc=\dimen161
+\pgf@xd=\dimen162
+\pgf@yd=\dimen163
+\w@pgf@writea=\write3
+\r@pgf@reada=\read2
+\c@pgf@counta=\count282
+\c@pgf@countb=\count283
+\c@pgf@countc=\count284
+\c@pgf@countd=\count285
+\t@pgf@toka=\toks24
+\t@pgf@tokb=\toks25
+\t@pgf@tokc=\toks26
+\pgf@sys@id@count=\count286
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/systemlayer/pgf.cfg
+File: pgf.cfg 2025-08-29 v3.1.11a (3.1.11a)
+)
+Driver file for pgf: pgfsys-pdftex.def
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/systemlayer/pgfsys-pdftex.def
+File: pgfsys-pdftex.def 2025-08-29 v3.1.11a (3.1.11a)
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/systemlayer/pgfsys-common-pdf.def
+File: pgfsys-common-pdf.def 2025-08-29 v3.1.11a (3.1.11a)
+))) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/systemlayer/pgfsyssoftpath.code.tex
+File: pgfsyssoftpath.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfsyssoftpath@smallbuffer@items=\count287
+\pgfsyssoftpath@bigbuffer@items=\count288
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/systemlayer/pgfsysprotocol.code.tex
+File: pgfsysprotocol.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/xcolor/xcolor.sty
+Package: xcolor 2024/09/29 v3.02 LaTeX color extensions (UK)
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/graphics-cfg/color.cfg
+File: color.cfg 2016/01/02 v1.6 sample color configuration
+)
+Package xcolor Info: Driver file: pdftex.def on input line 274.
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/graphics/mathcolor.ltx)
+Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1349.
+Package xcolor Info: Model `hsb' substituted by `rgb' on input line 1353.
+Package xcolor Info: Model `RGB' extended on input line 1365.
+Package xcolor Info: Model `HTML' substituted by `rgb' on input line 1367.
+Package xcolor Info: Model `Hsb' substituted by `hsb' on input line 1368.
+Package xcolor Info: Model `tHsb' substituted by `hsb' on input line 1369.
+Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1370.
+Package xcolor Info: Model `Gray' substituted by `gray' on input line 1371.
+Package xcolor Info: Model `wave' substituted by `hsb' on input line 1372.
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/basiclayer/pgfcore.code.tex
+Package: pgfcore 2025-08-29 v3.1.11a (3.1.11a)
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/math/pgfmath.code.tex (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/math/pgfmathutil.code.tex) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/math/pgfmathparser.code.tex
+\pgfmath@dimen=\dimen164
+\pgfmath@count=\count289
+\pgfmath@box=\box54
+\pgfmath@toks=\toks27
+\pgfmath@stack@operand=\toks28
+\pgfmath@stack@operation=\toks29
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.code.tex) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.basic.code.tex) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.trigonometric.code.tex) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.random.code.tex) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.comparison.code.tex) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.base.code.tex) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.round.code.tex) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.misc.code.tex) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.integerarithmetics.code.tex) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/math/pgfmathcalc.code.tex) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/math/pgfmathfloat.code.tex
+\c@pgfmathroundto@lastzeros=\count290
+)) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/math/pgfint.code.tex) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepoints.code.tex
+File: pgfcorepoints.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@picminx=\dimen165
+\pgf@picmaxx=\dimen166
+\pgf@picminy=\dimen167
+\pgf@picmaxy=\dimen168
+\pgf@pathminx=\dimen169
+\pgf@pathmaxx=\dimen170
+\pgf@pathminy=\dimen171
+\pgf@pathmaxy=\dimen172
+\pgf@xx=\dimen173
+\pgf@xy=\dimen174
+\pgf@yx=\dimen175
+\pgf@yy=\dimen176
+\pgf@zx=\dimen177
+\pgf@zy=\dimen178
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepathconstruct.code.tex
+File: pgfcorepathconstruct.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@path@lastx=\dimen179
+\pgf@path@lasty=\dimen180
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepathusage.code.tex
+File: pgfcorepathusage.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@shorten@end@additional=\dimen181
+\pgf@shorten@start@additional=\dimen182
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/basiclayer/pgfcorescopes.code.tex
+File: pgfcorescopes.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfpic=\box55
+\pgf@hbox=\box56
+\pgf@layerbox@main=\box57
+\pgf@picture@serial@count=\count291
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/basiclayer/pgfcoregraphicstate.code.tex
+File: pgfcoregraphicstate.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgflinewidth=\dimen183
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/basiclayer/pgfcoretransformations.code.tex
+File: pgfcoretransformations.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@pt@x=\dimen184
+\pgf@pt@y=\dimen185
+\pgf@pt@temp=\dimen186
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/basiclayer/pgfcorequick.code.tex
+File: pgfcorequick.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreobjects.code.tex
+File: pgfcoreobjects.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepathprocessing.code.tex
+File: pgfcorepathprocessing.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/basiclayer/pgfcorearrows.code.tex
+File: pgfcorearrows.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfarrowsep=\dimen187
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreshade.code.tex
+File: pgfcoreshade.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@max=\dimen188
+\pgf@sys@shading@range@num=\count292
+\pgf@shadingcount=\count293
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreimage.code.tex
+File: pgfcoreimage.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreexternal.code.tex
+File: pgfcoreexternal.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfexternal@startupbox=\box58
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/basiclayer/pgfcorelayers.code.tex
+File: pgfcorelayers.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/basiclayer/pgfcoretransparency.code.tex
+File: pgfcoretransparency.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepatterns.code.tex
+File: pgfcorepatterns.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/basiclayer/pgfcorerdf.code.tex
+File: pgfcorerdf.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+))) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/modules/pgfmoduleshapes.code.tex
+File: pgfmoduleshapes.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfnodeparttextbox=\box59
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/modules/pgfmoduleplot.code.tex
+File: pgfmoduleplot.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/pgf/compatibility/pgfcomp-version-0-65.sty
+Package: pgfcomp-version-0-65 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@nodesepstart=\dimen189
+\pgf@nodesepend=\dimen190
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/pgf/compatibility/pgfcomp-version-1-18.sty
+Package: pgfcomp-version-1-18 2025-08-29 v3.1.11a (3.1.11a)
+)) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/pgf/utilities/pgffor.sty (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/pgf/utilities/pgfkeys.sty (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/utilities/pgfkeys.code.tex)) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/pgf/math/pgfmath.sty (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/math/pgfmath.code.tex)) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/utilities/pgffor.code.tex
+Package: pgffor 2025-08-29 v3.1.11a (3.1.11a)
+\pgffor@iter=\dimen191
+\pgffor@skip=\dimen192
+\pgffor@stack=\toks30
+\pgffor@toks=\toks31
+)) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/frontendlayer/tikz/tikz.code.tex
+Package: tikz 2025-08-29 v3.1.11a (3.1.11a)
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/libraries/pgflibraryplothandlers.code.tex
+File: pgflibraryplothandlers.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@plot@mark@count=\count294
+\pgfplotmarksize=\dimen193
+)
+\tikz@lastx=\dimen194
+\tikz@lasty=\dimen195
+\tikz@lastxsaved=\dimen196
+\tikz@lastysaved=\dimen197
+\tikz@lastmovetox=\dimen198
+\tikz@lastmovetoy=\dimen199
+\tikzleveldistance=\dimen256
+\tikzsiblingdistance=\dimen257
+\tikz@figbox=\box60
+\tikz@figbox@bg=\box61
+\tikz@tempbox=\box62
+\tikz@tempbox@bg=\box63
+\tikztreelevel=\count295
+\tikznumberofchildren=\count296
+\tikznumberofcurrentchild=\count297
+\tikz@fig@count=\count298
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/modules/pgfmodulematrix.code.tex
+File: pgfmodulematrix.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfmatrixcurrentrow=\count299
+\pgfmatrixcurrentcolumn=\count300
+\pgf@matrix@numberofcolumns=\count301
+)
+\tikz@expandcount=\count302
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzlibrarytopaths.code.tex
+File: tikzlibrarytopaths.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+))) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzlibraryshapes.code.tex
+File: tikzlibraryshapes.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzlibraryshapes.geometric.code.tex
+File: tikzlibraryshapes.geometric.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/libraries/shapes/pgflibraryshapes.geometric.code.tex
+File: pgflibraryshapes.geometric.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzlibraryshapes.misc.code.tex
+File: tikzlibraryshapes.misc.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/libraries/shapes/pgflibraryshapes.misc.code.tex
+File: pgflibraryshapes.misc.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzlibraryshapes.symbols.code.tex
+File: tikzlibraryshapes.symbols.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/libraries/shapes/pgflibraryshapes.symbols.code.tex
+File: pgflibraryshapes.symbols.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzlibraryshapes.arrows.code.tex
+File: tikzlibraryshapes.arrows.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/libraries/shapes/pgflibraryshapes.arrows.code.tex
+File: pgflibraryshapes.arrows.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzlibraryshapes.callouts.code.tex (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/libraries/shapes/pgflibraryshapes.callouts.code.tex)) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzlibraryshapes.multipart.code.tex
+File: tikzlibraryshapes.multipart.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/libraries/shapes/pgflibraryshapes.multipart.code.tex
+File: pgflibraryshapes.multipart.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfnodepartlowerbox=\box64
+\pgfnodeparttwobox=\box65
+\pgfnodepartthreebox=\box66
+\pgfnodepartfourbox=\box67
+\pgfnodeparttwentybox=\box68
+\pgfnodepartnineteenbox=\box69
+\pgfnodeparteighteenbox=\box70
+\pgfnodepartseventeenbox=\box71
+\pgfnodepartsixteenbox=\box72
+\pgfnodepartfifteenbox=\box73
+\pgfnodepartfourteenbox=\box74
+\pgfnodepartthirteenbox=\box75
+\pgfnodeparttwelvebox=\box76
+\pgfnodepartelevenbox=\box77
+\pgfnodeparttenbox=\box78
+\pgfnodepartninebox=\box79
+\pgfnodeparteightbox=\box80
+\pgfnodepartsevenbox=\box81
+\pgfnodepartsixbox=\box82
+\pgfnodepartfivebox=\box83
+))) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzlibrarydecorations.code.tex (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/modules/pgfmoduledecorations.code.tex
+\pgfdecoratedcompleteddistance=\dimen258
+\pgfdecoratedremainingdistance=\dimen259
+\pgfdecoratedinputsegmentcompleteddistance=\dimen260
+\pgfdecoratedinputsegmentremainingdistance=\dimen261
+\pgf@decorate@distancetomove=\dimen262
+\pgf@decorate@repeatstate=\count303
+\pgfdecorationsegmentamplitude=\dimen263
+\pgfdecorationsegmentlength=\dimen264
+)
+\tikz@lib@dec@box=\box84
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzlibraryshadows.code.tex
+File: tikzlibraryshadows.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+
+(/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzlibraryfadings.code.tex
+File: tikzlibraryfadings.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/libraries/pgflibraryfadings.code.tex
+File: pgflibraryfadings.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+))) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzlibrarybackgrounds.code.tex
+File: tikzlibrarybackgrounds.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@layerbox@background=\box85
+\pgf@layerboxsaved@background=\box86
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzlibrarycalc.code.tex
+File: tikzlibrarycalc.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzlibraryfit.code.tex
+File: tikzlibraryfit.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzlibrarydecorations.pathmorphing.code.tex (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/libraries/decorations/pgflibrarydecorations.pathmorphing.code.tex)) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/libraries/pgflibraryarrows.code.tex
+File: pgflibraryarrows.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\arrowsize=\dimen265
+)
+\TP@innermargin=\dimen266
+\TP@visibletextwidth=\dimen267
+\TP@visibletextheight=\dimen268
+\TP@titlewidth=\dimen269
+\titlewidth=\dimen270
+\TP@titlelinewidth=\dimen271
+\titlelinewidth=\dimen272
+\titleinnersep=\dimen273
+\TP@titleinnersep=\dimen274
+\TP@titletotopverticalspace=\dimen275
+\titletotopverticalspace=\dimen276
+\TP@titletoblockverticalspace=\dimen277
+\TP@titleheight=\dimen278
+\titleheight=\dimen279
+\titlegraphicheight=\dimen280
+\titleposleft=\dimen281
+\titleposright=\dimen282
+\titlepostop=\dimen283
+\titleposbottom=\dimen284
+\TP@titlegraphictotitledistance=\dimen285
+\TP@colspace=\dimen286
+\TP@coltop=\dimen287
+\TP@colbottom=\dimen288
+\TP@colcenter=\dimen289
+\colwidth=\dimen290
+\TP@subcolspace=\dimen291
+\TP@subcoltop=\dimen292
+\TP@subcolbottom=\dimen293
+\TP@subcolcenter=\dimen294
+\subcolwidth=\dimen295
+\TP@blockverticalspace=\dimen296
+\TP@blockcenter=\dimen297
+\TP@blocktitleinnersep=\dimen298
+\blocktitleinnersep=\dimen299
+\TP@blockbodyinnersep=\dimen300
+\blockbodyinnersep=\dimen301
+\TP@blocktitlebox=\box87
+\TP@blockbodybox=\box88
+\TP@blocktitlewidth=\dimen302
+\TP@blockbodywidth=\dimen303
+\TP@blockbodyheight=\dimen304
+\TP@blocktitleheight=\dimen305
+\TP@blocktop=\dimen306
+\TP@blocktitleoffsetx=\dimen307
+\TP@blocktitleoffsety=\dimen308
+\TP@blockbodyoffsetx=\dimen309
+\TP@blockbodyoffsety=\dimen310
+\TP@blockbodyverticalshift=\dimen311
+\blocklinewidth=\dimen312
+\TP@innerblockcenter=\dimen313
+\TP@innerblocktitleinnersep=\dimen314
+\innerblocktitleinnersep=\dimen315
+\TP@innerblockbodyinnersep=\dimen316
+\innerblockbodyinnersep=\dimen317
+\TP@innerblocktitlebox=\box89
+\TP@innerblockbodybox=\box90
+\TP@innerblocktitlewidth=\dimen318
+\TP@innerblockbodywidth=\dimen319
+\TP@innerblockbodyheight=\dimen320
+\TP@innerblocktitleheight=\dimen321
+\TP@innerblocktitleoffsetx=\dimen322
+\TP@innerblocktitleoffsety=\dimen323
+\TP@innerblockbodyoffsetx=\dimen324
+\TP@innerblockbodyoffsety=\dimen325
+\TP@innerblockbodyverticalshift=\dimen326
+\innerblocklinewidth=\dimen327
+\TP@coloredbox=\box91
+\TP@coloredboxwidth=\dimen328
+\TP@coloredboxlinewidth=\dimen329
+\TP@coloredboxinnersep=\dimen330
+\TP@coloredboxheight=\dimen331
+\TP@noteinnersep=\dimen332
+\noteinnersep=\dimen333
+\TP@notetargetoffsetx=\dimen334
+\TP@notetargetoffsety=\dimen335
+\TP@noteradius=\dimen336
+\TP@notewidth=\dimen337
+\TP@noteheight=\dimen338
+\TP@notebox=\box92
+\notelinewidth=\dimen339
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/extsizes/extarticle.cls
+Document Class: extarticle 1996/10/08 v1.0 Non Standard LaTeX document class
+(/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/extsizes/size20.clo
+File: size20.clo 1999/11/11 NON-Standard LaTeX file (size option)
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/base/exscale.sty
+Package: exscale 2025/06/05 v2.1i Standard LaTeX package exscale
+LaTeX Font Info:    Redeclaring symbol font `largesymbols' on input line 57.
+LaTeX Font Info:    Overwriting symbol font `largesymbols' in version `normal'
+(Font)                  OMX/cmex/m/n --> OMX/cmex/m/n on input line 57.
+LaTeX Font Info:    Overwriting symbol font `largesymbols' in version `bold'
+(Font)                  OMX/cmex/m/n --> OMX/cmex/m/n on input line 57.
+\big@size=\dimen340
+)
+\c@part=\count304
+\c@section=\count305
+\c@subsection=\count306
+\c@subsubsection=\count307
+\c@paragraph=\count308
+\c@subparagraph=\count309
+\c@figure=\count310
+\c@table=\count311
+\abovecaptionskip=\skip52
+\belowcaptionskip=\skip53
+\bibindent=\dimen341
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/geometry/geometry.sty
+Package: geometry 2020/01/02 v5.9 Page Geometry
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/iftex/ifvtex.sty
+Package: ifvtex 2019/10/25 v1.7 ifvtex legacy package. Use iftex instead.
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/iftex/iftex.sty
+Package: iftex 2024/12/12 v1.0g TeX engine tests
+))
+\Gm@cnth=\count312
+\Gm@cntv=\count313
+\c@Gm@tempcnt=\count314
+\Gm@bindingoffset=\dimen342
+\Gm@wd@mp=\dimen343
+\Gm@odd@mp=\dimen344
+\Gm@even@mp=\dimen345
+\Gm@layoutwidth=\dimen346
+\Gm@layoutheight=\dimen347
+\Gm@layouthoffset=\dimen348
+\Gm@layoutvoffset=\dimen349
+\Gm@dimlist=\toks32
+)
+\pgf@layerbox@backgroundlayer=\box93
+\pgf@layerboxsaved@backgroundlayer=\box94
+\pgf@layerbox@notelayer=\box95
+\pgf@layerboxsaved@notelayer=\box96
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/tikzposter/tikzposterColorpalettes.tex) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/tikzposter/tikzposterColorstyles.tex) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/tikzposter/tikzposterBackgroundstyles.tex) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/tikzposter/tikzposterTitlestyles.tex) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/tikzposter/tikzposterBlockstyles.tex) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/tikzposter/tikzposterInnerblockstyles.tex) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/tikzposter/tikzposterNotestyles.tex) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/tikzposter/tikzposterLayoutthemes.tex)
+\c@figurecounter=\count315
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/base/inputenc.sty
+Package: inputenc 2024/02/08 v1.3d Input encoding file
+\inpenc@prehook=\toks33
+\inpenc@posthook=\toks34
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/base/fontenc.sty
+Package: fontenc 2025/07/18 v2.1d Standard LaTeX package
+LaTeX Font Info:    Trying to load font information for T1+aer on input line 116.
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/ae/t1aer.fd
+File: t1aer.fd 1997/11/16 Font definitions for T1/aer.
+)) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/amsmath/amsmath.sty
+Package: amsmath 2025/07/09 v2.17z AMS math features
+\@mathmargin=\skip54
+
+For additional information on amsmath, use the `?' option.
+(/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/amsmath/amstext.sty
+Package: amstext 2024/11/17 v2.01 AMS text
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/amsmath/amsgen.sty
+File: amsgen.sty 1999/11/30 v2.0 generic functions
+\@emptytoks=\toks35
+\ex@=\dimen350
+)) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/amsmath/amsbsy.sty
+Package: amsbsy 1999/11/29 v1.2d Bold Symbols
+\pmbraise@=\dimen351
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/amsmath/amsopn.sty
+Package: amsopn 2022/04/08 v2.04 operator names
+)
+\inf@bad=\count316
+LaTeX Info: Redefining \frac on input line 233.
+\uproot@=\count317
+\leftroot@=\count318
+LaTeX Info: Redefining \overline on input line 398.
+LaTeX Info: Redefining \colon on input line 409.
+\classnum@=\count319
+\DOTSCASE@=\count320
+LaTeX Info: Redefining \ldots on input line 495.
+LaTeX Info: Redefining \dots on input line 498.
+LaTeX Info: Redefining \cdots on input line 619.
+\Mathstrutbox@=\box97
+\strutbox@=\box98
+LaTeX Info: Redefining \big on input line 721.
+LaTeX Info: Redefining \Big on input line 722.
+LaTeX Info: Redefining \bigg on input line 723.
+LaTeX Info: Redefining \Bigg on input line 724.
+\big@size=\dimen352
+LaTeX Font Info:    Redeclaring font encoding OML on input line 742.
+LaTeX Font Info:    Redeclaring font encoding OMS on input line 743.
+\macc@depth=\count321
+LaTeX Info: Redefining \bmod on input line 904.
+LaTeX Info: Redefining \pmod on input line 909.
+LaTeX Info: Redefining \smash on input line 939.
+LaTeX Info: Redefining \relbar on input line 969.
+LaTeX Info: Redefining \Relbar on input line 970.
+\c@MaxMatrixCols=\count322
+\dotsspace@=\muskip17
+\c@parentequation=\count323
+\dspbrk@lvl=\count324
+\tag@help=\toks36
+\row@=\count325
+\column@=\count326
+\maxfields@=\count327
+\andhelp@=\toks37
+\eqnshift@=\dimen353
+\alignsep@=\dimen354
+\tagshift@=\dimen355
+\tagwidth@=\dimen356
+\totwidth@=\dimen357
+\lineht@=\dimen358
+\@envbody=\toks38
+\multlinegap=\skip55
+\multlinetaggap=\skip56
+\mathdisplay@stack=\toks39
+LaTeX Info: Redefining \[ on input line 2950.
+LaTeX Info: Redefining \] on input line 2951.
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/booktabs/booktabs.sty
+Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
+\heavyrulewidth=\dimen359
+\lightrulewidth=\dimen360
+\cmidrulewidth=\dimen361
+\belowrulesep=\dimen362
+\belowbottomsep=\dimen363
+\aboverulesep=\dimen364
+\abovetopsep=\dimen365
+\cmidrulesep=\dimen366
+\cmidrulekern=\dimen367
+\defaultaddspace=\dimen368
+\@cmidla=\count328
+\@cmidlb=\count329
+\@aboverulesep=\dimen369
+\@belowrulesep=\dimen370
+\@thisruleclass=\count330
+\@lastruleclass=\count331
+\@thisrulewidth=\dimen371
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/qrcode/qrcode.sty
+Package: qrcode 2015/01/08 v1.51 QR code generation
+\c@qr@i=\count332
+\c@qr@j=\count333
+\qr@a=\count334
+\qr@b=\count335
+\qr@c=\count336
+\qr@for@depth=\count337
+\qr@for@maxdepth=\count338
+\qr@for@start=\count339
+\qr@for@end=\count340
+\qr@for@step=\count341
+\qr@newforcount=\count342
+\qr@newforcount=\count343
+\qr@desiredheight=\skip57
+\qr@modulesize=\skip58
+\qr@minipagewidth=\skip59
+\c@maski=\count344
+\c@maskj=\count345
+\c@totalones=\count346
+\c@penaltyi=\count347
+\c@penaltyii=\count348
+\c@penaltyiii=\count349
+\c@penaltyiv=\count350
+\c@qr@hexchars=\count351
+\qr@newforcount=\count352
+\c@qr@divisionsremaining=\count353
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/enumitem/enumitem.sty
+Package: enumitem 2025/02/06 v3.11 Customized lists
+\enitkv@toks@=\toks40
+\labelindent=\skip60
+\enit@outerparindent=\dimen372
+\enit@toks=\toks41
+\enit@inbox=\box99
+\enit@count@id=\count354
+\enitdp@description=\count355
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/colortbl/colortbl.sty
+Package: colortbl 2024/10/29 v1.0k Color table columns (DPC)
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/tools/array.sty
+Package: array 2025/09/25 v2.6n Tabular extension package (FMi)
+\col@sep=\dimen373
+\ar@mcellbox=\box100
+\extrarowheight=\dimen374
+\NC@list=\toks42
+\extratabsurround=\skip61
+\backup@length=\skip62
+\ar@cellbox=\box101
+)
+\everycr=\toks43
+\minrowclearance=\skip63
+\rownum=\count356
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/libraries/pgflibraryarrows.meta.code.tex
+File: pgflibraryarrows.meta.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfarrowinset=\dimen375
+\pgfarrowlength=\dimen376
+\pgfarrowwidth=\dimen377
+\pgfarrowlinewidth=\dimen378
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzlibrarypositioning.code.tex
+File: tikzlibrarypositioning.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/tools/xspace.sty
+Package: xspace 2014/10/28 v1.13 Space after command names (DPC,MH)
+) (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
+File: l3backend-pdftex.def 2025-10-09 L3 backend support: PDF output (pdfTeX)
+\l__color_backend_stack_int=\count357
+)
+
+LaTeX Warning: Unused global option(s):
+    [margin=0mm,innermargin=15mm,blockverticalspace=9mm,colspace=15mm,subcolspace=8mm].
+
+(./poster.aux <Reading QR code for "https://REEMPLAZAR-CON-LIGA-DEL-VIDEO" at level 3-M from aux file.>
+)
+\openout1 = `poster.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 70.
+LaTeX Font Info:    ... okay on input line 70.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 70.
+LaTeX Font Info:    ... okay on input line 70.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 70.
+LaTeX Font Info:    ... okay on input line 70.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 70.
+LaTeX Font Info:    ... okay on input line 70.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 70.
+LaTeX Font Info:    ... okay on input line 70.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 70.
+LaTeX Font Info:    ... okay on input line 70.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 70.
+LaTeX Font Info:    ... okay on input line 70.
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
+Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
+Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 485.
+ (/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
+File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Live
+))
+*geometry* driver: auto-detecting
+*geometry* detected driver: pdftex
+*geometry* verbose mode - [ preamble ] result:
+* driver: pdftex
+* paper: a0paper
+* layout: <same size as paper>
+* layoutoffset:(h,v)=(0.0pt,0.0pt)
+* modes: 
+* h-part:(L,W,R)=(0.0pt, 2392.87677pt, 0.0pt)
+* v-part:(T,H,B)=(0.0pt, 3383.03267pt, 0.0pt)
+* \paperwidth=2392.87677pt
+* \paperheight=3383.03267pt
+* \textwidth=2392.87677pt
+* \textheight=3383.03267pt
+* \oddsidemargin=-72.26999pt
+* \evensidemargin=-72.26999pt
+* \topmargin=-122.26999pt
+* \headheight=20.0pt
+* \headsep=30.0pt
+* \topskip=20.0pt
+* \footskip=35.0pt
+* \marginparwidth=0.0pt
+* \marginparsep=15.0pt
+* \columnsep=10.0pt
+* \skip\footins=16.0pt plus 6.0pt minus 3.0pt
+* \hoffset=0.0pt
+* \voffset=0.0pt
+* \mag=1000
+* \@twocolumnfalse
+* \@twosidefalse
+* \@mparswitchfalse
+* \@reversemarginfalse
+* (1in=72.27pt=25.4mm, 1cm=28.453pt)
+
+Missing character: There is no 1 in font nullfont!
+Missing character: There is no = in font nullfont!
+Missing character: There is no 1 in font nullfont!
+<sima.png, id=29, 203.5605pt x 82.8696pt>
+File: sima.png Graphic file (type png)
+<use sima.png>
+Package pdftex.def Info: sima.png  used on input line 72.
+(pdftex.def)             Requested size: 323.05118pt x 131.53185pt.
+LaTeX Font Info:    Calculating math sizes for size <51.59> on input line 72.
+
+LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <25.795> not available
+(Font)              size <24.88> substituted on input line 72.
+
+
+LaTeX Font Warning: Font shape `OML/cmm/m/it' in size <51.59> not available
+(Font)              size <24.88> substituted on input line 72.
+
+
+LaTeX Font Warning: Font shape `OML/cmm/m/it' in size <36.11284> not available
+(Font)              size <24.88> substituted on input line 72.
+
+
+LaTeX Font Warning: Font shape `OML/cmm/m/it' in size <25.795> not available
+(Font)              size <24.88> substituted on input line 72.
+
+
+LaTeX Font Warning: Font shape `OMS/cmsy/m/n' in size <51.59> not available
+(Font)              size <24.88> substituted on input line 72.
+
+
+LaTeX Font Warning: Font shape `OMS/cmsy/m/n' in size <36.11284> not available
+(Font)              size <24.88> substituted on input line 72.
+
+
+LaTeX Font Warning: Font shape `OMS/cmsy/m/n' in size <25.795> not available
+(Font)              size <24.88> substituted on input line 72.
+
+
+LaTeX Font Warning: Font shape `OMX/cmex/m/n' in size <51.59> not available
+(Font)              size <24.88> substituted on input line 72.
+
+
+LaTeX Font Warning: Font shape `OMX/cmex/m/n' in size <36.11284> not available
+(Font)              size <24.88> substituted on input line 72.
+
+
+LaTeX Font Warning: Font shape `OMX/cmex/m/n' in size <25.795> not available
+(Font)              size <24.88> substituted on input line 72.
+
+LaTeX Font Info:    Trying to load font information for TS1+aer on input line 72.
+LaTeX Font Info:    No file TS1aer.fd. on input line 72.
+
+LaTeX Font Warning: Font shape `TS1/aer/m/n' undefined
+(Font)              using `TS1/cmr/m/n' instead
+(Font)              for symbol `textperiodcentered' on input line 72.
+
+
+LaTeX Font Warning: Font shape `TS1/cmr/m/n' in size <42.99> not available
+(Font)              size <35.83> substituted on input line 72.
+
+
+LaTeX Font Warning: Font shape `TS1/aer/m/n' in size <42.99> not available
+(Font)              size <35.83> substituted on input line 72.
+
+<tec.png, id=31, 903.375pt x 903.375pt>
+File: tec.png Graphic file (type png)
+<use tec.png>
+Package pdftex.def Info: tec.png  used on input line 72.
+(pdftex.def)             Requested size: 323.05118pt x 323.05061pt.
+File: sima.png Graphic file (type png)
+<use sima.png>
+Package pdftex.def Info: sima.png  used on input line 72.
+(pdftex.def)             Requested size: 323.05118pt x 131.53185pt.
+File: tec.png Graphic file (type png)
+<use tec.png>
+Package pdftex.def Info: tec.png  used on input line 72.
+(pdftex.def)             Requested size: 323.05118pt x 323.05061pt.
+<fig4.png, id=32, 1325.95375pt x 300.12125pt>
+File: fig4.png Graphic file (type png)
+<use fig4.png>
+Package pdftex.def Info: fig4.png  used on input line 212.
+(pdftex.def)             Requested size: 977.72781pt x 221.30315pt.
+
+Overfull \hbox (4.39998pt too wide) in paragraph at lines 212--212
+[][] 
+ []
+
+
+Overfull \hbox (4.39998pt too wide) in paragraph at lines 212--212
+[][] 
+ []
+
+<fig7.png, id=33, 1325.95375pt x 344.28625pt>
+File: fig7.png Graphic file (type png)
+<use fig7.png>
+Package pdftex.def Info: fig7.png  used on input line 212.
+(pdftex.def)             Requested size: 956.92072pt x 248.46378pt.
+
+Overfull \hbox (4.39998pt too wide) in paragraph at lines 212--212
+[][] 
+ []
+
+<fig5.png, id=34, 1325.95375pt x 445.665pt>
+File: fig5.png Graphic file (type png)
+<use fig5.png>
+Package pdftex.def Info: fig5.png  used on input line 212.
+(pdftex.def)             Requested size: 936.1136pt x 314.63588pt.
+
+Overfull \hbox (4.39998pt too wide) in paragraph at lines 212--212
+[][] 
+ []
+
+
+
+<QR code requested for "https://REEMPLAZAR-CON-LIGA-DEL-VIDEO" in version 0-M.>
+<Copying the QR code for "https://REEMPLAZAR-CON-LIGA-DEL-VIDEO" in version 3-M as previously calculated.>
+LaTeX Font Info:    Trying to load font information for T1+aett on input line 235.
+(/Users/ricardosalgadob/Library/TinyTeX/texmf-dist/tex/latex/ae/t1aett.fd
+File: t1aett.fd 1997/11/16 Font definitions for T1/aett.
+)
+Overfull \hbox (9.893pt too wide) in paragraph at lines 235--235
+\T1/aer/b/n/20.74 Con-tacto: \T1/aett/m/n/20.74 A01282489@tec.mx \TS1/aer/m/n/20.74 · \T1/aer/m/n/20.74 Código: \T1/aett/m/n/20.74 github.com/RicardoSalgadoB/MultiReto 
+ []
+
+LaTeX Font Info:    Calculating math sizes for size <17> on input line 256.
+
+LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <8.5> not available
+(Font)              size <8> substituted on input line 256.
+
+
+LaTeX Font Warning: Font shape `OML/cmm/m/it' in size <8.5> not available
+(Font)              size <8> substituted on input line 256.
+
+
+LaTeX Font Warning: Font shape `OMS/cmsy/m/n' in size <8.5> not available
+(Font)              size <8> substituted on input line 256.
+
+
+LaTeX Font Warning: Font shape `OMX/cmex/m/n' in size <8.5> not available
+(Font)              size <8> substituted on input line 256.
+
+[1
+
+{/Users/ricardosalgadob/Library/TinyTeX/texmf-var/fonts/map/pdftex/updmap/pdftex.map} <./sima.png> <./tec.png> <./fig4.png (PNG copy)> <./fig7.png (PNG copy)> <./fig5.png (PNG copy)>] (./poster.aux <Reading QR code for "https://REEMPLAZAR-CON-LIGA-DEL-VIDEO" at level 3-M from aux file.>
+)
+ ***********
+LaTeX2e <2025-11-01>
+L3 programming layer <2026-01-19>
+ ***********
+
+
+LaTeX Font Warning: Size substitutions with differences
+(Font)              up to 26.70999pt have occurred.
+
+
+LaTeX Font Warning: Some font shapes were not available, defaults substituted.
+
+ ) 
+Here is how much of TeX's memory you used:
+ 20672 strings out of 469471
+ 446182 string characters out of 5466853
+ 979573 words of memory out of 5000000
+ 48890 multiletter control sequences out of 15000+600000
+ 683490 words of font info for 150 fonts, out of 8000000 for 9000
+ 36 hyphenation exceptions out of 8191
+ 117i,15n,121p,1065b,1484s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ </Users/ricardosalgadob/Library/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm1728.600pk> </Users/ricardosalgadob/Library/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm2074.600pk> </Users/ricardosalgadob/Library/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm2488.600pk> </Users/ricardosalgadob/Library/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm3583.600pk></Users/ricardosalgadob/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmb10.pfb></Users/ricardosalgadob/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></Users/ricardosalgadob/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></Users/ricardosalgadob/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></Users/ricardosalgadob/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></Users/ricardosalgadob/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></Users/ricardosalgadob/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb></Users/ricardosalgadob/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt12.pfb>
+Output written on poster.pdf (1 page, 660472 bytes).
+PDF statistics:
+ 103 PDF objects out of 1000 (max. 8388607)
+ 56 compressed objects within 1 object stream
+ 0 named destinations out of 1000 (max. 500000)
+ 134 words of extra memory for PDF output out of 10000 (max. 10000000)
+

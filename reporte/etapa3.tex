@@ -1,0 +1,358 @@
+% Sébastien Bubeck is a bad person for stealing academic work
+
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+
+% Core packages
+\usepackage{amsmath,amssymb}
+\setcounter{MaxMatrixCols}{11}
+\usepackage{graphicx}
+\usepackage{tikz-cd}
+\usepackage{multicol}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{placeins}
+% Spanish language and accents
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-tabla,es-nodecimaldot]{babel}
+\usepackage[natbibapa]{apacite}
+\usepackage{xurl}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\floatname{algorithm}{Algoritmo}
+\usepackage{algpseudocode}
+\emergencystretch=3em
+\hbadness=10000
+
+\usepackage{enumitem}
+\usepackage{titlesec}
+% Spacing adjustments
+\setlength{\abovedisplayskip}{8pt}
+\setlength{\belowdisplayskip}{8pt}
+\setlength{\abovedisplayshortskip}{4pt}
+\setlength{\belowdisplayshortskip}{4pt}
+\setlist[itemize]{topsep=2pt,itemsep=1pt,parsep=0pt,partopsep=0pt}
+\setlist[enumerate]{topsep=2pt,itemsep=1pt,parsep=0pt,partopsep=0pt}
+\titlespacing*{\subsubsection}{0pt}{5pt}{3pt}
+\titlespacing*{\subsection}{0pt}{6pt}{4pt}
+\titlespacing*{\section}{0pt}{7pt}{5pt}
+
+% Paragraphs
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.8\baselineskip}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+
+    \IfFileExists{figuras/tec.png}{%
+        \includegraphics[width=0.5\textwidth]{figuras/tec.png}
+    }{%
+        \fbox{\parbox[c][4cm][c]{0.35\textwidth}{\centering tec.png}}
+    }
+
+    \vspace{1.2cm}
+
+    {\LARGE \bfseries Reto: Etapa 3 \par}
+
+    \vspace{1.5cm}
+
+    {\large
+    Ricardo Salgado Benítez - A01282489\\
+    Paola Mireles Ochoa - A01753439 \\
+    Aldo Javier Rodríguez Maytorena - A01741554\\
+    Lenin Adolfo Caballero Colunga - A01286929\\
+    \par}
+
+    \vspace{1.5cm}
+
+    {\large 15 de octubre de 2026 \par}
+
+    \vspace{1.5cm}
+
+    {\large Aplicación de métodos multivariados en ciencia de datos (MA2003B) - Grupo 201 \par}
+
+    \vspace{1.5cm}
+
+    {\large
+    Dra. Blanca Rosa Ruíz Hernández \\
+    Dr. Jesús Jorge Armenta Seguroa
+    \par}
+
+    \vfill
+\end{titlepage}
+
+\section{Objetivo de indagación} % ALDO
+
+La exposición diaria a niveles altos de contaminación del aire agrava enfermedades respiratorias y cardiovasculares e incrementa la mortalidad en zonas urbanas, por lo que anticipar episodios extremos resulta prioritario para el control ambiental \cite{montero2011}. A diferencia de los métodos enfocados en detectar valores atípicos de manera retrospectiva una vez que el evento ya ocurrió, el propósito preventivo requiere plantear la predicción de excedencias futuras como un problema de aprendizaje supervisado que permita advertir oportunamente a la población y reducir los riesgos a la salud \cite{wilson2022deepgpd}. Sin embargo, cuando la concentración de un contaminante se acerca a la norma legal, las medidas que aplican las autoridades afectan de forma importante la economía y la vida cotidiana de los ciudadanos, por lo que un sistema de alerta eficiente debe ser capaz de distinguir entre falsas alarmas y violaciones reales con días de anticipación \cite{montero2011}. Tradicionalmente, las agencias ambientales han utilizado modelos físicos de transporte químico como WRF-Chem o CMAQ para emitir estos pronósticos, pero dichos sistemas demandan un alto costo computacional, dependen de inventarios de emisiones que suelen estar desactualizados y tienden a subestimar los picos locales provocados por inversiones térmicas, lo que ha llevado a sistemas como el de la Ciudad de México a implementar pilotos híbridos con aprendizaje profundo para corregir sus sesgos \cite{garciareynoso2026}. De manera similar, en cuencas rodeadas por montañas donde el estancamiento invernal acumula contaminantes, como ocurre en Santiago de Chile, el sistema operativo SINCA reemplazó sus modelos estadísticos lineales por redes neuronales capaces de capturar relaciones no lineales entre la meteorología y el material particulado para declarar alertas escalonadas con 24 a 48 horas de anticipación \cite{mma2021_calidadaire}.
+
+A pesar de estos avances, aplicar redes neuronales convencionales directamente a la predicción de contaminantes tiene una limitación sustancial: al entrenarse minimizando el error cuadrático medio (MSE), los modelos aprenden a estimar la media condicional de los datos y suavizan la cola de distribución, fallando en los niveles de contaminantes extremos que se buscan anticipar \cite{wilson2022deepgpd}. Además, las series de contaminación de alta frecuencia presentan varianza no constante, clústeres de volatilidad y respuestas asimétricas según si el contaminante subió o bajó en el periodo previo \cite{montero2011}, a lo que se suma que la cantidad de excesos registrados sobre un umbral cambia de una ventana de tiempo a otra \cite{wilson2022deepgpd}. 
+
+Con base en esta necesidad operativa y en las brechas identificadas, el objetivo de indagación de este trabajo consiste en estimar, para cada una de las 15 estaciones fijas del Sistema Integral de Monitoreo Ambiental (SIMA) en el Área Metropolitana de Monterrey y para cada día, la probabilidad de que las concentraciones de $\text{O}_{3}$ (1 h, 90 ppb), $\text{PM}_{2.5}$ (24 h, $41~\mu\text{g/m}^{3}$) y $\text{SO}_{2}$ (1 h, 75 ppb) superen sus respectivas normas de salud a partir de las condiciones meteorológicas y de contaminación del día anterior. Más allá de un enfoque simplemente descriptivo, se busca evaluar la precisión con la que se pueda anticipar una excedencia mediante la arquitectura propuesta GCN-DeepGPD y determinar si este enfoque supera a un modelo de referencia de GPD constante sin covariables. Al acoplar la distribución de los excesos estimada por la red con el análisis de componentes principales y la regresión logística para modelar la probabilidad de rebasar el umbral inicial $u$, el proyecto tiene como finalidad entregar al socio formador una herramienta prescriptiva y calibrada que detecte episodios críticos y la tasa de falsas alarmas equilibradamente en la emisión de alertas ambientales \cite{panja2026}.
+
+\section{Técnicas aplicadas} % ALDO
+
+La teoría de los valores extremos (EVT) proporciona el marco fundamental para modelar el comportamiento de las colas en las distribuciones de datos, lo que resulta esencial al estimar riesgos en sistemas complejos. Dentro de esta teoría, el método de picos sobre el umbral (POT) se enfoca en analizar exclusivamente aquellas observaciones que superan un umbral alto predefinido, aproximado a la distribución de dichos excesos mediante una distribución generalizada de Pareto (GPD) \cite{Coles2001}. Debido a que las normas y objetivos de calidad del aire normalmente se formulan en términos de ciertos umbrales críticos, el enfoque POT resulta ser más adecuado y mejor interpretable en el contexto de la contaminación del aire. Asimismo, existe un consenso general respecto a que este enfoque genera estimadores más eficientes que el método clásico de máximos por bloques, ya que el método POT utiliza todas las observaciones grandes en lugar de ignorar valores extremos secundarios que pudieran concentrarse en un mismo bloque de tiempo \cite{gyarmati2017}. 
+
+Para modelar la dinámica de estos eventos en entornos reales, es fundamental considerar la no estacionalidad de las series temporales ambientales, lo cual se logra condicionando la distribución de los excesos a un vector de covariables. Esto permite que los parámetros de escala y forma de la GPD actúen como funciones dependientes de factores externos, tales como la meteorología o el tráfico. Recientemente, el panorama metodológico para la estimación de cuantiles extremos condicionales (CEQ) se ha enriquecido gracias a los avances en el aprendizaje profundo. En arquitecturas modernas, las \textbf{redes neuronales} logran extraer características espaciotemporales complejas y estiman los parámetros de la GPD directamente al minimizar la función de pérdida que corresponde a la log-verosimilitud negativa de la GPD.
+
+En la metodología de este proyecto, la teoría de valores extremos y el enfoque POT se materializan a través de la arquitectura ``GCN-DeepGPD'' para estimar con precisión la probabilidad de que las concentraciones de $O_3$ y $SO_2$ superen sus respectivas normas de salud. Ya que las 15 estaciones del Sistema Integral de Monitoreo Ambiental (SIMA) del Área Metropolitana de Monterrey no están distribuidas en una malla regular, el proyecto adapta este enfoque sustituyendo las convoluciones tradicionales por redes convolucionales para grafos (GCN). El pipeline del modelo procesa las variables meteorológicas junto con los excesos del día anterior mediante la técnica de "DeepSet", la cual permite integrar conjuntos con números variables de elementos. Finalmente, las capas de la red neuronal entregan los parámetros condicionales de forma y escala ($\xi$ y $\sigma$) de la GPD específicos para cada estación y cada día, los cuales se combinan con una regresión logística para calcular la probabilidad total de excedencia y así emitir alertas ambientales anticipadas.
+
+\section{Metodología} % PAOLA
+
+\subsection{Objetivo}
+El objetivo general se mantiene, pero se especifica a partir de la Etapa 2, el cual consiste en estimar, para cada estación y cada día, la probabilidad de que la concentración de O$_3$ (1~h, 90~ppb), PM$_{2.5}$ (24~h, 41~$\mu$g/m$^3$) y SO$_2$ (1~h, 75~ppb) supere su propia norma de salud. Por lo tanto, la pregunta guía se consolida de la siguiente manera:  \emph{¿con qué precisión puede anticiparse, a partir de las condiciones del día anterior, la probabilidad de una excedencia, y una red neuronal para grafos mejora a una GPD estimada sin covariables?} El criterio de precisión es la log-verosimilitud negativa de la GPD y la calibración de las probabilidades (puntaje de Brier).
+
+Según \citet{gyarmati2017}, la probabilidad de superar la norma $z$ se separa en dos partes: 
+\begin{equation}
+    \mathbb{P}(Y > z \mid \mathbf{c}) \;=\; \underbrace{\rho_u(\mathbf{c})}_{\mathbb{P}(Y>u \mid \mathbf{c})}\;\underbrace{\left[1+\frac{\xi\,(z-u)}{\sigma_u(\mathbf{c})}\right]^{-1/\xi}}_{\mathbb{P}(Y>z \mid Y>u,\,\mathbf{c})}, \qquad z > u,
+    \label{eq:total}
+\end{equation}
+
+donde $u$ es un umbral alto, $\rho_u$  es la probabilidad de superarlo. El segundo factor indica qué tan alto puede llegar un episodio y esto está implementado con la GPD y la red neuronal. El primero indica qué tan probable es un episodio, lo cual se estima con regresión logística. 
+
+\subsection{Datos y diseño de validación}
+Se trabaja con datos horarios de las 15 estaciones desde enero de 2023. Los contaminantes se eligieron por el número de días con excedencia (Tabla~\ref{tab:excedencias}), en la cual se descartan el CO y el NO$_2$ y la norma de 24~h del SO$_2$ (4 días), ya que no tienen suficientes eventos para ajustar la cola. El PM$_{10}$ también es descartado, ya que rebasa la norma en uno de cada cuatro días, de modo que la norma queda en el cuerpo de la distribución y no en la cola. 
+
+\begin{table}[H]
+\centering
+\small
+\caption{Excedencias de la norma (2020--2026). Periodos y excedencias suman todas las estaciones; los días distintos cuentan cada fecha una sola vez.}
+\vspace{5pt}
+\label{tab:excedencias}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Norma} & \textbf{Periodos} & \textbf{Excedencias} & \textbf{\%} & \textbf{Días distintos} \\
+\midrule
+CO 8~h móvil (9~ppm)              & 717{,}615 & 65      & 0.01  & 8       \\
+NO$_2$ 1~h (106~ppb)              & 692{,}672 & 220     & 0.03  & 80      \\
+O$_3$ 1~h (90~ppb)                & 717{,}699 & 6{,}439 & 0.90  & 660     \\
+PM$_{10}$ 24~h (70~$\mu$g/m$^3$)  & 32{,}980  & 7{,}928 & 24.04 & 1{,}241 \\
+PM$_{2.5}$ 24~h (41~$\mu$g/m$^3$) & 25{,}882  & 1{,}070 & 4.13  & 493     \\
+SO$_2$ 1~h (75~ppb)               & 713{,}915 & 308     & 0.04  & 173     \\
+SO$_2$ 24~h (40~ppb)              & 29{,}415  & 4       & 0.01  & 4       \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Los umbrales se muestran en la Tabla~\ref{tab:umbrales}. El umbral $u$ corresponde a un percentil alto de los datos horarios y $u+x$ es la norma. 
+
+\begin{table}[H]
+\centering
+\small
+\caption{Umbrales del modelo: $u$ define los excesos y $u+x$ es la norma de salud.}
+\vspace{5pt}
+\label{tab:umbrales}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Contaminante} & $u$ & $x$ & $u + x$ \textbf{(norma)} \\
+\midrule
+O$_3$ (ppb)                 & 63.0 & 27.0 & 90 \\
+SO$_2$ (ppb)                & 20.2 & 54.8 & 75 \\
+PM$_{2.5}$ ($\mu$g/m$^3$)   & 38.0 & 3.0  & 41 \\
+\bottomrule
+\end{tabular}
+\end{table}
+ 
+Debido a que los datos presentan dependencias temporales, la partición es cronológica y no aleatoria, se entrena con 2023--2024, se valida con 2025 (para detener el entrenamiento y elegir el modelo) y prueba con 2026 que se usa una sola vez. Las 17 variables de entrada (8 contaminantes y 7 variables meteorológicas, así como la hora y el mes) se estandarizan con la media y la desviación estándar del entrenamiento. Esto se hace para no filtrar información de los otros periodos. Los excesos $Y-u$ se mantienen en sus unidades originales, ya que la GPD se define sobre excesos no negativos. Una especificación del modelo a realizar que es la red y la GPD constante se entrenan con la base imputada  (\texttt{datos\_imputados.csv}), tanto en las entradas como en los excesos. Mientras que la validación del umbral, los ajustes por estación, el ACP y la regresión logística solo usan datos observados. 
+
+\begin{table}[H]
+\centering
+\small
+\caption{Técnicas, su papel en la ecuación~\eqref{eq:total} y su estado.}
+\vspace{5pt}
+\label{tab:tecnicas}
+\begin{tabular}{p{2.8cm}p{2.3cm}p{4.6cm}p{2.4cm}}
+\toprule
+\textbf{Técnica} & \textbf{Tipo} & \textbf{Papel} & \textbf{Estado} \\
+\midrule
+GPD constante & Valores extremos & Referencia: un solo $(\sigma, \xi)$ para todo el periodo & Implementada para  O$_3$  \\
+GCN--DeepGPD & Aprendizaje profundo & $\sigma$ y $\xi$ por estación y día, según las condiciones del día anterior & Implementada \\
+Conglomerados jerárquicos y prueba de Mantel & Interdependencia & Agrupar las estaciones por sus parámetros de la GPD y probar si siguen un patrón geográfico & Implementada \\
+Componentes principales & Interdependencia & Resumir la meteorología correlacionada & Implementada\\
+Regresión logística & Dependencia & Estimar $\rho_u(\mathbf{c})$ & Implementada \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{GPD constante como referencia}
+Como modelo de referencia se ajusta una sola GPD a todos los excesos de entrenamiento  \citep{Coles2001}. Los parámetros se estiman por máxima verosimilitud con el algoritmo BFGS, usando $\log\sigma$ para garantizar $\sigma>0$ y los valores iniciales por el método de momentos. Los errores estándar se obtienen aproximados utilizando la inversa de la matriz hessiana. De esta forma, si la red no supera este modelo con el periodo de validación, las covariables no aportan información sobre la cola. 
+
+\textbf{Validación del umbral.} El modelo supone $u$ es lo bastante alto para que los excesos sigan una GPD. Si esto se cumple a partir de un umbral $u_0$, para cualquier $u > u_0$ el exceso medio es
+\[
+E(Y-u \mid Y>u) = \frac{\sigma_0 + \xi u}{1-\xi}, \qquad \xi < 1,
+\]
+
+este es lineal en $u$ \citep{Coles2001}. Por lo tanto, antes del ajuste se construye la gráfica de vida residual media (el exceso medio observado para una serie de umbrales candidatos) y se verifica que los umbrales de la Tabla~\ref{tab:umbrales} caigan en la zona donde la gráfica es lineal. Como complemento se revisa que  $\xi$ y $\sigma^* = \sigma_u - \xi u$ se mantengan estables al ajustar la GPD con umbrales cercanos. Un umbral demasiado bajo sesga el ajuste y uno demasiado alto deja pocos excesos \citep{tang2026}.
+
+\subsection{Red convolucional para grafos (GCN--DeepGPD)}
+El modelo adapta la arquitectura de \citet{wilson2022deepgpd}, la cual consiste en una red convolucional sobre una malla regular, a las 15 estaciones del SIMA que no forman una malla. Para esto, se remplaza la convolución por una red convolucional para grafos \citep{Bacciu2020GentleIntro}. Con la información de un día, el modelo predice $\sigma$ y $\xi$ de los excesos del día siguiente en cada estación. Se compone de tres partes: 
+
+\begin{itemize}[leftmargin=*]
+    \item\textbf{Extracción local (\textit{deep set}).} Los excesos del día anterior varían en número y pueden faltar, por lo que se resumen con un deep set que procesa cada exceso por separado, los promedia y entrega un vector de dimensión fija (4 valores y un indicador de datos faltantes). 
+    \item\textbf{Extracción espacial y temporal (grafo).} Cada nodo del grafo es una estación en una hora (15 estaciones $\times$ 24 horas $=$ 360 nodos). Estas contienen 17 variables estandarizadas y las 5 del deep set. Las aristas espaciales unen estaciones en la misma hora, con un peso que decae con la distancia de Haversine $d_{ij}$ mediante un núcleo gaussiano,  $a_{ij} = \exp(-d_{ij}^2/\tilde{d}^2)$, donde $\tilde{d}^2$ representa la mediana de las distancias al cuadrado. Las aristas temporales unen cada estación consigo misma en horas consecutivas.  La propagación usa el laplaciano normalizado y reescalado, $2L/\lambda_{\max} - I$. La red tiene tres capas convolucionales de 32 neuronas, activación ELU y conexiones residuales y una capa final lineal que resume las 360 salidas en un par de parámetros por estación. 
+    \item\textbf{Modelación de valores extremos.} Las salidas se transforman para poder cumplir las restricciones de la GPD la cual es:  $\sigma = e^{k_1} > 0$ y $\xi = e^{k_2} - \sigma/m$, donde $m$ es el mayor exceso de entrenamiento en dicha estación, garantizando que todos los excesos observados sean posibles bajo el modelo \citep{wilson2022deepgpd}. Además $k_1$ y $k_2$ se acotan y esto impone $\xi > -1$. Lo cual sucede debido a que por debajo de ese valor la verosimilitud no está acotada y el ajuste se degenera. 
+\end{itemize}
+
+La red se entrena minimizando la log-verosimilitud negativa de la GPD sobre los excesos del día siguiente, ignorando horas sin exceso. Se utiliza el optimizador Adam tasa de aprendizaje ($10^{-4}$), un tope a la norma del gradiente y paro temprano según la pérdida de validación. Es necesario especificar que se han entrenado los contaminantes de O$_3$ y SO$_2$. 
+
+\subsection{Análisis de conglomerados de las estaciones}
+
+Con el objetivo de analizar si los parámetros de la cola cambian según la ubicación, se ajusta una GPD constante a los excesos observados de cada estación (solo en las que tienen al menos treinta excesos para que el ajuste sea confiable) y esto se compara con el promedio de los parámetros que predice la red. Después se agrupan las 15 estaciones según sus parámetros $(\xi, \sigma)$, tanto los observados como los de la red. Como $\xi$ y $\sigma$ tienen escalas muy distintas, primero se estandarizan. Se usa el método jerárquico de Ward, que en cada paso une los dos grupos que menos aumentan la varianza dentro de los grupos, y el número de grupos se elige con el coeficiente de silueta, que mide qué tan separados están los grupos (valores mayores a $0.5$ indican una estructura clara).
+
+Para probar si las estaciones cercanas tienen parámetros parecidos se usa la prueba de Mantel, ya que esta mide la correlación entre la matriz de distancias geográficas (Haversine) y la matriz de distancias entre parámetros. Su hipótesis nula establece que no hay relación entre ambas y el p-value se obtiene permutando las estaciones 9{,}999 veces. Se elige esta prueba ya que no supone normalidad; por lo tanto, si los parámetros observados muestran un patrón geográfico, la red debería de producirlo (en caso contrario, el grupo de estaciones se puede presentar como covariable).
+
+\subsection{Componentes principales y regresión logística}
+La red solo estima la segunda parte de la ecuación~\eqref{eq:total}. Para completar la probabilidad de excedencia se implementarán dos técnicas vistas en el curso ajustadas con los datos observados de entrenamiento (2023--2024) y evaluadas en 2025 y 2026: 
+
+
+\textbf{Análisis de componentes principales.} En el análisis exploratorio y a través de las gráficas generadas, se mostró que las variables meteorológicas presentaban correlación entre sí (temperatura y radiación, $\rho = 0.48$; humedad y radiación, $\rho = -0.36$; temperatura y viento, $\rho = 0.33$), lo que produciría multicolinealidad en un modelo de regresión. El ACP las transforma en componentes no correlacionados. Este se aplica a temperatura, humedad, radiación, viento, presión, lluvia y dirección del viento. La lluvia se multiplica por 20 en las estaciones CE, NE, NO2, NO3, NTE2, SE y SO, como indicó el SIMA, porque en ellas se registra en unidades 20 veces menores, y después se transforma con $\log(1+x)$, porque casi siempre vale cero y tiene picos que dominarían los componentes. El ACP se aplica sobre la matriz de correlación, porque las variables tienen unidades distintas, después de verificar con la prueba de esfericidad de Bartlett y el índice KMO que la correlación es suficiente. El número de componentes se elige por la regla de Kaiser, la gráfica de sedimentación y una varianza acumulada de al menos 70~\%, y las cargas se usan para interpretar cada componente.
+
+\textbf{Regresión logística.} La respuesta $\mathbb{1}\{Y>u\}$ es binaria y el objetivo requiere probabilidades, por lo tanto, $\rho_u$  se debe modelar como $\operatorname{logit}\rho_u(\mathbf{c}) = \beta_0 + \boldsymbol{\beta}^\top\mathbf{c}$, con los componentes principales, la hora, el mes y la estación como predictores \citep{gyarmati2017}. Este método se prefiere sobre el análisis discriminante ya que supone normalidad multivariada y covarianzas iguales entre grupos, lo que son supuestos poco aceptables para las distribuciones tan asimétricas que se están utilizando. Se revisa la independencia (autocorrelación de los residuos), la ausencia de multicolinealidad y un mínimo de 10 eventos por parámetro.  La importancia de las variables se mide con razones de momios y con pruebas de verosimilitudes que eliminan bloques completos (meteorología, hora, mes, y estación). Debido a que los residuos están autocorrelacionados, estas pruebas se usan para ordenar los bloques por importancia y no como pruebas de significancia exactas. El modelo se compara con la frecuencia histórica de cada estación y con el discriminante lineal mediante el puntaje de Brier, el AUC y diagramas de calibración. 
+
+\subsection{Criterio de evaluación}
+La regresión logística ya se evaluó en 2025 y 2026 con el puntaje de Brier, el AUC y diagramas de calibración. Para la red falta generar sus predicciones de 2025 y 2026 (las disponibles corresponden al periodo de entrenamiento); con ellas se compararán en validación y prueba:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Log-verosimilitud negativa} de la GPD sobre los excesos, de la red frente a la GPD constante.
+    \item \textbf{Puntaje de Brier} de $\mathbb{P}(Y>u+x \mid Y>u)$, comparado con predecir siempre la frecuencia observada de entrenamiento.
+    \item \textbf{Diagrama de calibración:} si el modelo predice 20~\%, la excedencia debe ocurrir cerca del 20~\% de las veces.
+    \item Una vez estimado $\rho_u$, el Brier de la probabilidad total~\eqref{eq:total} y las tasas de aciertos y de falsas alarmas al emitir una alerta.
+
+\end{itemize}
+
+
+\section{Resultados} % LENIN
+El proyecto se ha trabajado en 3 etapas. Todas ellas con el objetivo de estimar la probabilidad de que un contaminante rebase su el umbral de su respectiva norma de salud. 
+
+En la etapa 1, se unificaron los registros horarios de las 15 estaciones de SIMA (2020-2026), se quitaron duplicados y los valores sin sentido físico, pero dejando los extremos ya que estos corresponden a episodios críticos. También se probó imputar los faltantes con el modelo SAITS-CSDI.
+
+En la etapa 2, se auditó la calidad de los datos, que quedaron en 764,485 registros horarios después de la depuración. Se vió cómo se distribuían las excedencias según contaminantes, estación, hora, temporada y meterología, y con eso se definieron los contaminantes con los que se iba a trabajar y los umbrales de trabajo: O3, SO2 y PM2.5 (Tabla 2).
+
+En esta etapa 3, se implementó el modelo \textit{GCN-DeepGPD}. El pipeline arma, para cada día, un tensor de 15 estaciones $\times$ 24 horas con 17 variables estandarizadas y los excesos del día anterior. De ahí, la red entrega los parámetros ($\xi$, $\sigma$) de la GPD por estación y día, y con ellos se calcula directamente $\mathbb{P}(Y>u+x \mid Y>u)$.
+Actualmente, los modelos están entrenados para obtener las predicciones de O3 ($u$ = 63 ppb, norma de 90 ppb) y SO2 ($u$ = 20.2 ppb, norma de 75 ppb). Además, se aplicaron el análisis de componentes principales y la regresión logística para estimar P(Y > u).
+
+\vspace{-10pt}
+\paragraph{Validación de los umbrales.} Los resultados de este proceso pueden ser vistos en la figura \ref{fig:umbral}. Se concluye que, para O$_3$, hay una tendencia lineal en el sentido que una línea recta puede ser ajustada para quedar dentro de los intervalos de confianza del modelo. Por este motivo, se puede concluir que el umbral es válido, pese a la clara inestabilidad de los parámetros.
+
+Por otro lado, para SO$_2$, su excesos medios no son lineales para sus umbrales y sus parámetros tampoco son estables. Por lo tanto, se concluyq que el umbral no es válido y, en futuras revisiones del trabajo, se deberá de buscar seleccionar un umbral lo suficientemente alto como para asegurar la linealidad de los datos. Sin embargo, cabe mencionar que ya se ha estado observando un peor desempeño de este modelo por la menor cantidad de excesos en lso datos de entrenamiento, así que se desconoce se pueda acentuar ante un aumento del umbral.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{figuras/fig_umbral.png}
+    \caption{Validación de umbrales para O$_3$ y SO$_2$.}
+    \label{fig:umbral}
+\end{figure}
+
+\vspace{-10pt}
+\paragraph{Análisis de conglomerados.} Tras utilizar tanto para los parámetros generados por la red neuronal como por aquellos que fueron obtenidos al ajustar la distribución a los datos observados (mediante la función \texttt{scipy.stats.genepareto.fit} en Python), se obtuvieron resultados inconclusivos. Para ser más claros, la distribución de los parámetros generados por la red no mostró tendencias geográficas, pero el ajuste de los parámetros a los datos observados si los mostró. A partir de esto último, se lograron identificar dos grupos como se puede ver en el segundo renglón de la figura \ref{fig:conglomerados}. Fuera de esto significar que el modelo no funciona, una explicación posibles para estos resultados de los parámetros generados es que estos estén siendo dominados por las características temporales del problema y no por sus características geográficas. En todo caso, este es el caso deseado para un problema en el que se buscan llevar a cabo alertas temporales.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{figuras/fig_conglomerados.png}
+    \centering
+    \caption{Dendogramas y visualización gráfica para el análisis de los parámetros para los datos observados.}
+    \label{fig:conglomerados}
+\end{figure} 
+
+\vspace{-20pt}
+\paragraph{Análisis de Componentes Principales.} Las variables meteorológicas estaban lo bastante correlacionadas para resumirlas (Bartlett: $\chi^2 = 193{,}589$ con 28 gl, $p \approx 0$; KMO $= 0.715$). La regla de Kaiser sugería 3 componentes, pero dejamos 5 para llegr a 78.2\% de varianza acumulada (el primero explica 28.6\%). El primer componente junta temperatura, humedad, radiación y viento, con la humedad en sentido contrario a las otras tres. El segundo y el quinto se asocian sobre todo con la dirección del viento. El tercero agrupa la lluvia y presión en el mismo sentido, mientras que el cuarto las contrapone.
+
+\vspace{-20pt}
+\paragraph{Regresión Logística.} Se ajustó los modelos con 211,448 observaciones y 10,209 eventos en O3 (365 eventos por parámetro; pseudo-$R^2$ de 0.418), y con 207,760 observaciones y 1,345 eventos en SO2 (48 por parámetro; pseudo-$R^2$ de 0.285). No hay multicolinealidad (VIF máximo de 3.63 y 3.52) y el tamaño de muestra alcanza, pero la independencia no se cumple; la autocorrelación mediana de los residuos es de 0.47 en O3 y 0.21 en SO2. Por eso las pruebas por bloques sirven para ordenar la importancia de los bloues, no para tomarlas como contrastes exactos. En O3 pesan más la meteorología ($\chi^2 = 6{,}381.7$) y la hora (5,311.0), y después la estación (1,752.6) y el mes (1,198.8). En SO2 el bloque más importante es la estación (1,166.2), seguido de la meteorología (422.5), el mes (368.9) y la hora (155.3). La lluvia es la variable con mayo efecto y baja la probabilidad de superar el umbral en los dos contaminantes. Esto coincide con la Etapa 2: el O3 depende de la meteorología y de las horas de la tarde, y el SO2 se concentra en estaciones específicas.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\caption{Regresión logística de $P(Y>u)$ frente a la frecuencia histórica por estación (referencia, entre paréntesis) y al discriminante lineal (LDA). BSS $=1-\text{Brier logística}/\text{Brier referencia}$.}
+\vspace{5pt}
+\label{tab:logistica}
+\begin{tabular}{p{2.0cm}>{\centering\arraybackslash}p{2.3cm}>{\centering\arraybackslash}p{2.3cm}>{\centering\arraybackslash}p{0.9cm}>{\centering\arraybackslash}p{2.0cm}>{\centering\arraybackslash}p{1.1cm}}
+\toprule
+\textbf{Periodo} & \textbf{Eventos / $n$} & \textbf{Brier log. (ref.)} & \textbf{BSS} & \textbf{AUC log. (ref.)} & \textbf{AUC LDA} \\
+\midrule
+\multicolumn{6}{l}{\textit{O$_3$}} \\
+Validación 2025 & 6,394 / 92,479 & 0.0438 (0.0640) & 0.317 & 0.944 (0.622) & 0.932 \\
+Prueba 2026 & 2,216 / 39,272 & 0.0389 (0.0527) & 0.262 & 0.941 (0.642) & 0.932 \\
+\midrule
+\multicolumn{6}{l}{\textit{SO$_2$}} \\
+Validación 2025 & 1,106 / 90,562 & 0.0114 (0.0118) & 0.035 & 0.859 (0.838) & 0.853 \\
+Prueba 2026 & 151 / 39,514 & 0.0037 (0.0038) & 0.017 & 0.903 (0.770) & 0.880 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+En O3 el modelo mejora con claridad a la referencia (BSS de 0.32 y 0.26) y discrimina muy bien (AUC de 0.94). En SO2 la mejora en Brier es pequeña (0.03 y 0.02) porque hay pocos eventos, aunque el AUC sí supera al de la referencia. El LDA queda un poco por debajo en todos los casos.
+
+En la calibración, la frecuencia observada crece con la probabilidad predicha. EN O3 queda por encima de la diagonal, lo que indica una ligera subestimación. En SO2, la curva de validación queda por encima de la diagonal, lo que indica una ligera subestimación. EN SO2, la curva de validación queda por encima de la diagonal, y la de prueba, por debajo en los grupos de mayor probabiliad
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{figuras/graficasO3curvas.png}
+    \caption{Probabilidad vs Frecuenia: O3 y SO2}
+    \label{fig:probabilidadFrecuencia}
+\end{figure}
+
+
+\paragraph{Red GCN-DeepGPD.} Evaluamos los modelos de O$_3$ y SO$_2$ en entrenamiento (2023-2024), validación (2025) y prueba (2026), sobre la base de datos, que usa el dato observado siempre que existe, e imputa solo los huecos. Con esta base, el entrenamiento tiene $12{,}343$ excesos en O$_3$ y $1{,}421$ en SO$_2$. Tomamos cada hora con exceso como una observación y definimos el evento como $Y - u \geq x$. La referencia es una GPD constante ajustada por BFGS a los excesos de entrenamiento: $\xi = -0.054$ (e.e. $0.008$) y $\sigma = 16.95$ ppb para O$_3$, y $\xi = 0.303$ (e.e. $0.037$) y $\sigma = 10.21$ ppb para SO$_2$.
+
+La ``frecuencia'' predice siempre la proporción de eventos de entrenamiento (O$_3$: $0.187$; SO$_2$: $0.043$).
+
+\textbf{O$_3$.} En los datos de entrenamiento, la red mejora a la GPD constante (NLL de 3.720 contra 3.776) y el Brier baja 8.9 \% respecto a la frecuencia. En los datos de validación esa ventaja se mantiene: la NLL es menor (3.796 contra 3.805), el Brer baja 4.1 \% y el AUC es de 0.646. En los datos de prueba,a ya no. En 2026, la NLL es peor que la GPD constante (3.863 contra 3.818), el Brier no mejora (0.1692 contra 0.1679) y el AUC cae a 0.573.
+
+Las probabilidades se ordenan bien, pero en promedio subestiman el riesgo (0.182 y 0.170 contra frecuencias observadas de 0.203 y 0.21), y la calibración empeora fuera de muestra. Por ejemplo, el grupo de menor riesgo predice 0.062 y se observa 0.097 en validación (0.057 y 0.184 en prueba). Con un umbral de alerta igual a la frecuencia de entrenamiento (0.187) detectamos 58 \% de los eventos en 2025 y 45\,\% en 2026, con 37 \% y 33 \% de falsas alarmas. Con el doble (0.374) las falsas alarmas bajan a 4 \%, pero solo detectamos alrededor de 12 \% y 9 \% de los eventos.
+
+\textbf{SO$_2$.} La red no supera a las referencias en ningún periodo, ni siquiera en entrenamiento (Brier de $0.0487$ contra $0.0411$ de la frecuencia). En validación y prueba la NLL es peor que la de la GPD constante ($3.920$ contra $3.728$ y $3.543$ contra $3.508$), y la red sobreestima el riesgo: la probabilidad media es de $0.104$ y $0.075$, contra frecuencias observadas de $0.054$ y $0.029$. El grupo de mayor riesgo predice $0.377$ y se observa $0.110$ en validación ($0.229$ y $0.037$ en prueba). El AUC de $0.646$ y $0.698$ muestra cierta capacidad para ordenar los casos, pero con solo $69$ y $12$ eventos esa cifra es muy inestable. Además, este modelo se entrenó antes de corregir la base.
+
+
+\begin{table}[H]
+\centering
+\footnotesize
+\caption{Desempeño de la red frente a la GPD constante. La ``frecuencia'' predice siempre la proporción de eventos de entrenamiento (O$_3$: 0.187; SO$_2$: 0.043).}
+\vspace{5pt}
+\label{tab:red}
+\begin{tabular}{p{2.1cm}>{\centering\arraybackslash}p{2.0cm}>{\centering\arraybackslash}p{2.2cm}>{\centering\arraybackslash}p{3.6cm}>{\centering\arraybackslash}p{1.0cm}}
+\toprule
+\textbf{Periodo} & \textbf{Excesos / eventos} & \textbf{NLL red (GPD const.)} & \textbf{Brier red / GPD const. / frecuencia} & \textbf{AUC} \\
+\midrule
+\multicolumn{5}{l}{\textit{O$_3$}} \\
+Entrenamiento & 12,343 / 2,311 & 3.720 (3.776) & 0.1387 / 0.1522 / 0.1522 & 0.717 \\
+Validación 2025 & 8,596 / 1,742 & 3.796 (3.805) & 0.1552 / 0.1618 / 0.1618 & 0.646 \\
+Prueba 2026 & 3,919 / 832 & 3.863 (3.818) & 0.1692 / 0.1678 / 0.1679 & 0.573 \\
+\midrule
+\multicolumn{5}{l}{\textit{SO$_2$}} \\
+Entrenamiento & 1,421 / 61 & 3.585 (3.626) & 0.0487 / 0.0411 / 0.0411 & 0.789 \\
+Validación 2025 & 1,288 / 69 & 3.920 (3.728) & 0.0694 / 0.0509 / 0.0508 & 0.646 \\
+Prueba 2026 & 413 / 12 & 3.543 (3.508) & 0.0353 / 0.0284 / 0.0284 & 0.698 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\paragraph{Sintesis y limitaciones} Los dos factores de la ecuación 1 se comportan distinto. La probabilidad de superar el umbral, $P(Y > u)$, se estima muy bien en O$_3$ con meteorología, hora y estación (AUC de $0.94$ y mejora de 26--32 \% en el Brier). En SO$_2$ el resultado es más modesto, y ahí pesa sobre toda la estación. La red, que estima qué tan alto llega un episodio, dio una mejora pequeña en O$_3$ en validación que no se sostuvo en prueba, y en SO$_2$ no mostró ventaja sobre la GPD constante.
+
+Hay varias cosas que matizan esto. La regresión logística usa los datos observados sin imputar, mientras que la red usa la base corregida. La red entrega un par $(\xi, \sigma)$ por estación y día, no por hora. El SO$_2$ tiene muy pocos eventos, y su modelo no se reentrenó con la base corregida. Todavía falta combinar los dos factores para obtener la probabilidad total de la ecuación 1 y evaluar el Brier total y las tasas de aciertos y falsas alarmas del sistema completo.
+
+
+
+\section{Conclusiones} % RICARDO
+
+A lo largo de este proyecto, se desarrolló e implementó un sistema metodológico integral para estimar la probabilidad de que las concentraciones de contaminantes superen las normas de salud vigentes en el Área Metropolitana de Monterrey. Para lograrlo, se estructuró un flujo de trabajo que combinó la teoría de valores extremos mediante el enfoque de picos sobre el umbral (POT) con arquitecturas avanzadas de aprendizaje profundo, específicamente redes convolucionales para grafos. Esta combinación permitió superar las limitaciones de los modelos tradicionales al capturar adecuadamente las dinámicas no lineales de las colas de distribución en las 15 estaciones fijas de SIMA. 
+
+Asimismo, el análisis predictivo se enrobusteció a través de técnicas estadísticas. Mediante el Análisis de Componentes Principales (ACP), se logró resumir la multicolinealidad presente en las variables meteorológicas, reteniendo un porcentaje óptimo de la varianza total. Posteriormente, el uso de la regresión logística facilitó la modelación de la probabilidad de superar los umbrales iniciales, destacando factores como la influencia de la meteorología, los horarios vespertinos en el caso del $O_3$ y la concentración en estaciones específicas para el $SO_2$.
+
+En conclusión, se logró consolidad una herramientra prescriptiva y calibrada que permite a SIMA de una capacidad de anticipación superior entre 24 y 48 horas. Al equilibrar de manera adecuada la tasa de aciertos y falsas alarmas frente a episodios críticos de contaminación, la metodología propuesta representa un avance significativo hacia la gestión ambiental preventiva y la protección oportuna de la salud pública urbana.
+
+\appendix
+
+\pagebreak
+
+\nocite{*}
+\bibliographystyle{apacite}
+\bibliography{references}
+\end{document}

@@ -1,0 +1,575 @@
+% Sébastien Bubeck is a bad person for stealing academic work
+
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+
+% Core packages
+\usepackage{amsmath,amssymb}
+\setcounter{MaxMatrixCols}{11}
+\usepackage{graphicx}
+\usepackage{tikz-cd}
+\usepackage{multicol}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{placeins}
+% Spanish language and accents
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-tabla,es-nodecimaldot]{babel}
+\usepackage[natbibapa]{apacite}
+\usepackage{xurl}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\floatname{algorithm}{Algoritmo}
+\usepackage{algpseudocode}
+\emergencystretch=3em
+\hbadness=10000
+
+\usepackage{enumitem}
+\usepackage{titlesec}
+% Spacing adjustments
+\setlength{\abovedisplayskip}{8pt}
+\setlength{\belowdisplayskip}{8pt}
+\setlength{\abovedisplayshortskip}{4pt}
+\setlength{\belowdisplayshortskip}{4pt}
+\setlist[itemize]{topsep=2pt,itemsep=1pt,parsep=0pt,partopsep=0pt}
+\setlist[enumerate]{topsep=2pt,itemsep=1pt,parsep=0pt,partopsep=0pt}
+\titlespacing*{\subsubsection}{0pt}{5pt}{3pt}
+\titlespacing*{\subsection}{0pt}{6pt}{4pt}
+\titlespacing*{\section}{0pt}{7pt}{5pt}
+
+% Paragraphs
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.8\baselineskip}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+
+    \IfFileExists{figuras/tec.png}{
+        \includegraphics[width=0.5\textwidth]{figuras/tec.png}
+    }{
+        \fbox{\parbox[c][4cm][c]{0.35\textwidth}{\centering tec.png}}
+    }
+
+    \vspace{1cm}
+
+    {\LARGE \bfseries Modelación de excedencias de ozono en el área metropolitana de Monterrey \par}
+
+    \vspace{1.2cm}
+
+    {\large
+    \textbf{Equipo 6} \\
+    Ricardo Salgado Benítez - A01282489\\
+    Paola Mireles Ochoa - A01753439 \\
+    Aldo Javier Rodríguez Maytorena - A01741554\\
+    Lenin Adolfo Caballero Colunga - A01286929\\
+    \par}
+
+    \vspace{1.2cm}
+
+    {\large 24 de octubre de 2026 \par}
+
+    \vspace{1.2cm}
+
+    {\large Aplicación de métodos multivariados en ciencia de datos (MA2003B) - Grupo 201 \par}
+
+    \vspace{1.5cm}
+
+    {\large
+    Dra. Blanca Rosa Ruíz Hernández \\
+    Dr. Jesús Jorge Armenta Seguroa
+    \par}
+
+    \vfill
+\end{titlepage}
+
+
+\begin{abstract}
+    Este proyecto desarrolla un modelo de dos etapas para estimar la probabilidad (con un día de anticipación) de que el ozono (O$_3$) supere el límite horario de 90 ppb e la NOM-020-SSA1-2021 en las 15 estaciones del Sistema Integral de Monitero Ambiental (SIMA) del área metropolitana de Monterrey (AMM). Se eligió el ozono por su fuerte dependencia de la meteorología y la estacionalidad, lo que facilita su predicción. Se trabaja con los datos de las 15 estaciones del Sistema Integral de Monitoreo Ambiental (SIMA),utilizando datos horarios de 2023 a julio de 2026, divididos cronológicamente en entrenamiento (2023--2024), validación (2025) y prueba (enero a julio de 2026), se ajusta un modelo por estación. Debido a que los días sobre la norma son pocos, la probabilidad se separa en dos partes: un modelo aditivo generalizado (GAM) con respuesta binaria ajustado en conjunto para las 15 estaciones, el cual estima la probabilidad de que el máximo de mañana supere un umbral auxiliar de 63ppb a aprtir de la persistencia del ozono, la meteorología y el pronóstico de temperatura. La segunda aplica el método de picos sobre el umbral (POT) para ajustar una distribución generalizada de Pareto (GPD) a los excedentes y extrapolar hacia la norma. Se eligió el GAM debido a a que la regresión logística no cumple el supuesto de linealidad. En el 2026, el modelo obtuvo un Brier Skill Score de 0.251 frente a la climatología y un AUC de 0.844; con el corte de alerta fijado en 2025, detectó 68.8\,\% de los días con exceso con 61.3\,\% de falsas alrmas. Una regresión logística con las mismas variables predijo practicamente igual, por lo que la ventaja del GAM es que cumple con sus supuestos y muestra el efecto de cada vairable, en donde el riesgo sube con el ozono de hoy y con la temperatura pronosticada y baja con el viento. En cuanto a técnicas de interdependencia se usaron componentes principales y un análisis de conglomerados sobre la dependencia de colas, el cual revela dependencia asintótica entre estaciones, atribuible a la estacionalidad, la proximidad física y la dispersión de contaminantes.
+\end{abstract}
+
+\section{Introducción y justificación}
+
+La exposición prolongada a altas concentraciones de contaminación atmosférica represrnta uno de los principales de riesgo para la salud pública en zonas urbanas, propiciando el desarrollo de enfermedades cardiovasculares y respiratorias. En el Área Metropolinata de Monterrey (AMM), factores como el crecimiento demográfico, el dinamismo industrial y una orografía rodeada de montañas favorecen la acumulación de contaminantes y la formación de esmog fotoquímico. Ante esta realidad, las autoridades han impulsado esfuerzos recientes para robustecer la infraestructura de medición, tal como la modernización del Sistema Integral de Monitoreo Ambiental (SIMA) \cite{gobnl2025}. Sin embargo, el monitoreo por sí solo es una herramienta retrospectiva. Para mitigar eficazmente la exposición de la población, es imperativo transitar de un esquema de reacción a uno de prevención mediante el diseño de sistemas de alerta temprana.
+
+Declarar una contingencia ambiental conlleva importantes repercusiones socioeconómicas, pues implica un alto de actividades industriales y la restricción de la movilidad urbana. Por lo tanto, un sistema de pronóstivo operativo debe ser altamente preciso, buscando un equilibrio estricto entre la tasa de detención de eventos críticos y la mnimización de falsas alarmas \cite{montero2011}. Tradicionalmente, las agencias ambientales han dependido de modelos numéricos tridimensionales de transporte químico, como WRF-Chem o CMAQ. No obstante, como señalan García Reynoso y Almanza \cite{garciareynoso2026} en su reciente análisis operativo para el centro de México, estos modelos físicos enfrentan limitaciones considerables en su implementación diaria: requieren de un costo computacional prohibitivo, son altamente dependientes de datos de emisiones estáticos (comúnmente desactualizados) y tienden a subestimar los picos locales provocados por inversiones térmicas o microclimas urbanos.
+
+Frente a las deficiencias operativas de los modelos físicos, diversas zonas metropolitanas con topografías complejas y problemas de estancamiento de aire severos han migrado hacia enfoques estadísticos y de aprendizaje automático. Un caso análogo es el de Santiago de Chile, donde el Sistema de Información Nacional de Calidad del Aire (SINCA) reemplazó sus antiguos modelos lineales por redes neuronales y algoritmos no lineales, logrando anticipar preemergencias y alertas ambientales con horizontes de 24 a 48 horas de antelación \cite{mma2021_calidadaire}. Estos enfoques basados en datos resultan más flexibles para capturar la relación compleja entre las variables meteorológicas y la concentración de contaminantes secundarios.
+
+Sin embargo, el uso de algoritmos de aprendizaje automático convencional para predecir eventos extremos de contaminación presenta un desafío inherente a su estructura matemática. Wilson, Tan y Luo \cite{wilson2022deepgpd} aclaran que los modelos de regresión supervisados que minimizan el error cuadrático medio (MSE) están diseñados para converger hacia la media condicional de la distribución de los datos, lo que consecuentemente suaviza las colas de la distribución, fallando sistemáticamente en la predicción de valores extremos. 
+
+Con fin de superar esta limitación, la literatura reciente sugiere integrar arquitecturas de aprendizaje estadístico con la Teoría de Valores Extremos (EVT). Emn este sentido, la aproximación de Picos sobre el Umbral (POT, por sus siglas en inglés) dictamina que los excesos por emcima de un umbral suficientemente alto siguen una Distribución Generalizada de Pareto (GDP) \cite{coles2001}. El presente proyecto se justifica en la necesidad de proveer al SIMA de una herramienta prescriptiva, interpretable y calibrada que una la potencia de los modelos estadísticos no lineales con la robustez matemática de la EVT. Con ello, se busca anticipar con un día de antelación el comportamiento extremo del ozono troposférico ($O_3$), dotando a las autoridades de Monterrey de un margen de maniobra crucial para la protección de la salud ciudadana.
+
+
+\section{Objetivo y problemática}
+
+La problemática que aborda este proyecto es la dificultad de predecir confiablemente y con 24 horas de anticipación la probabilidad de que las concentraciones horarias de ozono troposférico ($O_3$) superen el límite normativo de 90 ppb establecido para la protección de la salud \cite{ssa2021b} en las 15 estaciones fijas de monitoreo del SIMA \cite{simapresentacion}. Debido a que los días que sobrepasan esta norma representan una fracción muy reducida del histórico de datos, la predicción directa sufre de un desbalance de clases severo y dificulta la detección de la señal por parte de clasificadores convencionales.
+
+El objetivo de este proyecto es desarrollar, entrenar y validad un sistema de alerta temprana mediante un modelo predictivo híbrido de dos etapas, el cual estime la probabilidad de excedencias de ozono con un día de anticipación. 
+
+Para lograrlo, el proyecto adopta la formulación propuesta por Gyarmati-Szabó et al. \cite{gyarmati2017}. En la primera fase, se adopta un Modelo Aditivo Generalizado (GAM) penalizado, el cual modelará de manera no lineal la probabilidad de que el pico de ozono del día siguiente rebase un umbral de riesgo intermedio (63 ppb). En la segunda fase, la intensidad máxima del episodio se extrapolará hacia el límite normativo (90 ppb) ajustando una Distribución Generalizada de Pareto (GPD) sobre la cola de los datos extremos.El sistema completo se alimentará exclusivamente de mediciones observacionales validadas, la persistencia temporal de los contaminantes, y pronósticos meteorológicos de temperatura máxima y mínima obtenidos de fuentes externas (Open-Meteo) \cite{zippenfenig_open_meteo_2023}, con el propósito de brindar un instrumento de apoyo a la toma de decisiones que garantice la interpretabilidad física y un balance óptimo entre la sensibilidad de detección y la reducción de alertas falsas. 
+
+\section{Preparación de los datos}
+
+% Descripción de la base de datos
+
+Como se mencionó, para este proyecto se usaron los datos recopilados por SIMA para cada una de las 15 estaciones del AMM. Por este motivo, se excluyeron los datos anteriores a 2023, donde no todas estas estaciones estaban disponibles. Los datos restantes fueron divididos en conjuntos de entrenamiento (años 2023 y 2024), validación (2025) y prueba (primeros 7 meses de 2026).
+
+Existen registros para cada estación (15), durante 1,308 días (365 en 2023, 366 en 2024, 365 en 2025 y 212 de enero a julio de 2026), es decir 470,880 registros antes del preprocesamiento, 263,160 de entrenamiento, 31,400 de validación y 76320 de prueba. Para cada uno de estos registros, se utilizarón 9 variables: Fecha y hora, ozono (\texttt{O3}), temperatura (\texttt{TOUT}), humedad relativa (\texttt{RH}), radiación solar (\texttt{SR}), presión atmósferica (\texttt{PRS}), precipitación (\texttt{RAINF}), velocidad del viento (\texttt{WSR}) y dirección del viento (\texttt{WDR}). Más adelante se detallará si y cómo se transformaron estas variables.
+
+Adicionalmente a los datos de SIMA, se probó usar modelos que utilizar los datos del pronóstico de temperatura del día siguiente para generar una predicción más robusta. En partícular, la tempertura mínima y máxima pronosticada para el día siguiente (\texttt{T\_min\_pron} y \texttt{T\_max\_pron}). Estos datos se obtienen de OpenMeteo, que es una API de código abierto que ofrece datos meteorológicos gratuitos. Esto se lleva a cabo mediante una combinación de más de 30 modelos meteorológicos además de datos históricos \citep{zippenfenig_open_meteo_2023}.
+
+Se utilizó el pronóstico emitido el día anterior en $^\circ$C (las mismas unidades que \texttt{TOUT}); frente a la mediana de las estaciones del SIMA tiene una correlación de 0.964, un sesgo de $-0.3\,^\circ$C y un RMSE de 1.9\,$^\circ$C.
+% Contexto de las estaciones meteorológicas
+
+% Imputación
+
+Para los datos de SIMA, se identificó que un 5.13\% de los datos del ozono y un 2.02\% de las variables predictoras. Para aumentar el número de datos disponibles para el modelo, se decidió imputar los datos usando el modelo \textit{MIMA-v6} desarrollado por \citet{gomezsantos2027hybrid} en este mismo conjunto de datos. Desafortunadamente, se observó que el modelo generaba una amplia cantidad de valores más allá de los rangos posibles, que fueron reemplazados por nulos en una etapa posterior del preprocesamiento. Pese a estas correcciones, el modelo se mostró capaz de llevar a cabo inferencias descabelladas para ciertos datos (por ejemplo, valores negativos de temperatura en julio). Por este motivo, se tomó la decisión de no usar los datos imputados para la validación y prueba del modelo.
+
+% Feature engineering
+
+Antes de entregar los datos a los modelos, se imputaron los datos atípicos según los rangos válidos otorgados por el socio formador (veáse Anexo~\ref{anexo:rango_valido}). Además, en el preprocesamiento de esto modelo, también se agregó la variable de precipitación transformada mediante $\log(x+1)$.
+
+La ingeniería de características para generar las componentes sinusoidales del viento escalados por su velocidad (\texttt{wind\_u} y \texttt{wind\_v}). En lo que respecta a las variables temporales, se generaron características de estacionalidad y de persistencia. Las primeras incluyen: componentes sinusoidales de hora con periodos de 12 y 24 horas (\texttt{hour\_sen1}, \texttt{hour\_cos1}, \texttt{hour\_sen2} y \texttt{hour\_cos2}, respectivamente), componentes sinusoidales de mes con periodo de 12 meses (\texttt{mes\_sen}, \texttt{mes\_cos}) y si el día de hoy es sábado o domingo. Para las segundas, las variables generadas incluyen: nivel del ozono hoy (\texttt{x\_t}), si hay excedencia actualmente (\texttt{exc\_t}), nivel del ozono ayer (\texttt{x\_lag1}), máximo de ozono en los anteriores $n_1$ días (\texttt{max$n$}) y suma de las anteriores $n_2$ excedentes (\texttt{n\_exc$n$}). No todos los modelos usan de la misma manera estos características generadas y los que las usan varían sus parámetros ($n_1$ y $n_2$).
+
+% Declustering (justificación y mecanismo)
+
+El método de POT asume independencia entre los picos, por ende es necesario eliminar la autocorrelación de los datos del ozono. Esto se lleva a cabo aplicando una función de \textbf{declustering}. Se considera como un clúster todo aquel conjunto de excedencias que este separado $r$ días de otro conjunto de excedencias. En la Figura~\ref{fig:declustering} se comparan el número de clústeres y el índice extremal para distintos valores de $r$ en el conjunto de entrenamiento. El índice extremal ($\theta$) representa la proporción de excesos que se están conservando y su inversa ($1/\theta$) es el tamaño promedio de cada clúster. El comportamiento de una GPD estacionaria con respecto a $r$ puede ser observada en Anexo~\ref{anexo:declustering}.
+
+\begin{figure}[H]
+\centering
+\begin{minipage}[t]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figuras/declustering/num_clusters.png}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figuras/declustering/ext_index.png}
+\end{minipage}
+\caption{Número de clústeres (izquierda) e índice extremal (derecha) para distintos valores de $r$ en el conjunto de entrenamiento.}
+\label{fig:declustering}
+\end{figure}
+
+
+
+\section{Modelación}
+\label{sec:modelacion}
+
+% Para cada modelo incluir justificación y metodología
+El objetivo es estimar con un día de anticipación la probabilidad de que el O$_3$ supere la norma de $c=90$ ppb. Debido a que los días sobre la norma son pocos (822 estación-días en entrenamiento), la probabilidad se separa en dos partes \citep{gyarmati2017}:
+\begin{equation}
+P(X > c) \;=\; \underbrace{P(X > u)}_{\zeta} \;\times\; \underbrace{\left[1 + \xi\,\frac{c-u}{\sigma}\right]_{+}^{-1/\xi}}_{P(X>c \,\mid\, X>u)},
+\qquad u = 63 \text{ ppb}.
+\label{eq:dos_partes}
+\end{equation}
+
+La primera parte, $\zeta$, corresponde a la probabilidad de que exista un episodio y se estima con un modelo de respuesta binaria (técnica de dependencia). La segunda indica qué tan alto llega el episodio y se estima con la distribución generalizada de Pareto (GPD) ajustada a los excesos sobre $u$. Es de esta manera que se aprovechan todos los excesos sobre 63 ppb, no solo los pocos días sobre 90 ppb, y un mismo modelo da la probabilidad de superar cualquier nivel $c>u$. Se probaron una red neuronal de grafos, una regresión logística horaria por estación y un modelo aditivo generalizado (GAM) diario para las 15 estaciones, el cual corresponde al modelo final. Como referencia sin forma funcional se ajustó un \textit{gradient boosting} de árboles \citep{friedman2001} utilizando las mismas variables que no permite interpretar efectos ni extrapolar la cola. 
+
+\subsection{Red neuronal para grafos (descartada)}
+\label{sec:mod-gcn}
+% Breve descripción de cómo jalaba la red
+
+Las estaciones comparten episodios (sección~\ref{sec:dependencia}), así que se buscó estimar $\sigma$ y $\xi$ de todas a la vez, compartiendo información entre estaciones vecinas, con el enfoque DeepGPD de \citet{wilson2022deepgpd}. Cada día se representó como un grafo de $15\times24$ nodos (estación y hora). Las estaciones se conectaron con un núcleo gaussiano de su distancia, $A_{ij}=\exp(-d_{ij}^2/\tilde d^{\,2})$ con $\tilde d^{\,2}$ la mediana de $d^2$, y cada nodo con la hora anterior y la siguiente. Las variables de cada nodo pasan por un módulo de conjuntos \textit{Deep Set} y seis capas de convolución en grafos \citep{kipf2017gcn}. La salida es $(\sigma,\xi)$ por estación y la pérdida es la log-verosimilitud negativa de la GPD, penalizando los excesos fuera del soporte. Se comparó contra una GPD constante y se descartó debido a que su ventaja no se sostuvo fuera de muestra, sobreajustó con pocos excesos y no capturó diferencias espaciales entre estaciones (sección~\ref{sec:val-gcn}).
+
+\subsection{Regresión logística}
+\label{sec:mod-logit}
+
+La regresión logística es la técnica de dependencia natural para una respuesta binaria y entrega directamente una probabilidad (no requiere predictores normales) \citep{hosmer2013}. Para cada estación y hora $t$ se modeló $y_t=\mathbb{1}\{X_{t+24}>u\}$, es decir, si se superará 63 ppb a la misma hora del día siguiente. Se usó un horizonte de 24 debido a que con 1hr la concentración actual casi determina la siguiente, lo que vuelve trivial la predicción, y para que la organización pueda anticiparse para actuar ante este fenómeno. El modelo es:
+\begin{equation}
+\operatorname{logit}\zeta_t = \beta_0 + \boldsymbol{\beta}_{\text{pers}}^{\top}\mathbf{p}_t + \boldsymbol{\beta}_{\text{cal}}^{\top}\mathbf{c}_{t+24} + \textstyle\sum_{k=1}^{5}\gamma_k\,\mathrm{CP}_{k,t},
+\label{eq:logit}
+\end{equation}
+
+donde $\mathbf{p}_t$ es la persistencia (nivel actual, máximo de 24 h y horas sobre $u$ en las últimas 24 y 168 h), $\mathbf{c}_{t+24}$ es el calendario de la hora objetivo (senos y cosenos de la hora con periodos de 24 y 12 h, y del mes) y $\mathrm{CP}_k$ los componentes principales de la meteorología. Las ocho variables meteorológicas (TOUT, RH, SR, WSR, PRS, $\log(1+\text{RAINF})$ y seno y coseno de WDR) están correlacionadas, por lo que se resumieron utilizando un análisis de componentes principales (ACP) \citep{jolliffe2016}, técnica de análisis de relaciones de interdependencia. El ACP se calculó solo con los datos de entrenamiento y sobre la matriz de correlaciones; esto se hizo pensando en las variables con unidades distintas, para que tuvieran el mismo peso. Para 2025 y 2026 no se recalculó, ya que los datos se estandarizaron con las medias y desviaciones de entrenamiento y se proyectaron sobre los mismos vectores propios. Por lo tanto, cada componente significa lo mismo en todos los periodos y no se usa información de los años de validación o prueba.
+
+Los coeficientes se estimaron por máxima verosimilitud con las variables estandarizadas para que fueran comparables entre sí. Debido a que las horas de un mismo día no son independientes, los errores estándar se agruparon por día (de lo contrario serían demasiado pequeños). Las variables se agregaron por bloques (persistencia, después calendario y, por último, meteorología original o componentes principales) y cada bloque se evaluó con la prueba de razón de verosimilitudes, que indica si mejora el ajuste, y con el BSS (Brier skill score) en 2025, que indica si mejora la predicción en datos nuevos. Para la comparación final con el GAM (sección~\ref{sec:poder}) se ajustó además una versión diaria lineal de esta regresión con exactamente las mismas variables del GAM.
+
+\subsection{Modelo aditivo generalizado}
+\label{sec:mod-gam}
+
+La validación mostró que la regresión logística no cumple con el supuesto de linealidad (sección~\ref{sec:val-logit}). Para evitar imponer una forma, como un término cuadrático, se usó un GAM con respuesta binaria \citep{wood2017}, el cual establece que cada variable continua entra con una curva suave estimada de los datos, por lo que el resultado sigue siendo una probabilidad y el efecto de cada variable se puede graficar. Asimismo, el planteamiento cambió en tres puntos: (1) se predice si el máximo de O$_3$ de mañana superará $u$, que es lo que define una alerta y evita penalizar picos recorridos una o dos horas; (2) se ajusta un solo modelo para las 15 estaciones con un efecto fijo por estación, para tener más eventos y curvas más estables; (3) se agrega el pronóstico de temperatura máxima y mínima de mañana emitido un día antes \citep{zippenfenig_open_meteo_2023}. Como la temperatura máxima de hoy y las pronosticadas están muy correlacionadas, se reexpresaron como \emph{nivel} (máxima pronosticada), \emph{cambio} (máxima pronosticada $-$ máxima de hoy) y \emph{rango} (máxima $-$ mínima pronosticadas). Es decir, una transformación lineal invertible que conserva la información y permite separar sus curvas. Para la estación $s$ y el día $t$, con $\zeta_{s,t}=P(\max X_{s,t+1}>u)$,
+\begin{equation}
+\operatorname{logit}\zeta_{s,t} = \beta_0 + \sum_{j=1}^{11} f_j(x_{j,s,t}) + \gamma_1\sin\tfrac{2\pi m}{12} + \gamma_2\cos\tfrac{2\pi m}{12} + \gamma_3\,\text{sáb} + \gamma_4\,\text{dom} + \alpha_s ,
+\label{eq:gam}
+\end{equation}
+donde $m$ es el mes del día objetivo, $\alpha_s$ el efecto de la estación y $f_j$ la curva de cada variable continua de la Tabla~\ref{tab:variables} (cinco de persistencia de O$_3$, tres meteorológicas de hoy y tres de temperatura pronosticada). Todas se conocen el día $t$, por lo que no se usa información del día que se predice.
+
+Cada $f_j$ es un \textit{B-spline} cúbico de ocho bases, y los coeficientes maximizan la log-verosimilitud binomial penalizada
+\begin{equation}
+\ell_p(\boldsymbol{\beta}) = \ell(\boldsymbol{\beta}) - \tfrac{1}{2}\,\alpha\textstyle\sum_{j}\boldsymbol{\beta}_j^{\top}\mathbf{S}_j\,\boldsymbol{\beta}_j ,
+\label{eq:penalizada}
+\end{equation}
+donde $\mathbf{S}_j$ mide la curvatura de $f_j$. Utilizando $\alpha\to0$ las curvas siguen el ruido y con $\alpha\to\infty$ se vuelven rectas. La penalización se eligió por el BSS de $\zeta$ en 2025, no con validación cruzada generalizada (GCV), que supone observaciones independientes cuando las estaciones de un mismo día están correlacionadas. Este GAM penalizado es utilizado para predecir; sin embargo, no ofrece una prueba directa para la linealidad de las relaciones. Con el motivo de probarlo formalmente, se ajustó una versión auxiliar en la que cada variable entra con su término lineal más dos términos de un \textit{spline} cúbico restringido \citep{harrell2015}. Estos términos permiten que la curva se doble en cuatro nudos ubicados en los percentiles 5, 35, 65 y 95 de la variable de entrenamiento y la obligan a ser recta antes del primer nudo y después del último (evita que se disparen los valores extremos). Si la relación fuera lineal, los términos adicionales valdrían cero, lo que permitió aplicar una prueba de Wald con hipótesis nula de que todos ellos son cero. Por último, para asegurarnos de que la correlación entre las variables climáticas no altera los resultados, se ajustó el mismo GAM sustituyendo esas variables por sus componentes principales, que no están correlacionados entre sí.
+
+
+\subsection{Modelo para la estimación de parámetros de la distribución generalizada de Pareto}
+\label{sec:mod-gpd}
+
+Por el teorema de Pickands--Balkema--de Haan, para un umbral $u$ alto los excesos $Y= X-u$ se aproximan por una GPD sin importar la distribución de $X$ \citep{coles2001}:
+\begin{equation}
+P(Y > y \mid X > u) = \left[1 + \xi\,y/\sigma\right]_{+}^{-1/\xi}, \qquad \sigma>0 .
+\label{eq:gpd}
+\end{equation}
+
+La escala $\sigma$ indica el tamaño típico de los excesos y la forma $\xi$, el tipo de cola. Si $\xi<0$, la cola está acotada en $u-\sigma/\xi$, como se espera en el O$_3$. La GPD supone excesos independientes, por lo que en el modelo horario se ajustó solo al pico de cada episodio (\textit{declustering} por rachas con $r=24$ h), y en el diario, al máximo de cada día. Siguiendo el Modelo I de \citet{gyarmati2017}, la escala depende de covariables y la forma es constante, $\log\sigma_t=\beta_0+\boldsymbol{\beta}^{\top}\mathbf{z}_t$. En el modelo horario se probaron la meteorología (WSR, TOUT, RH), los componentes principales y $\operatorname{logit}\hat\zeta$. El Modelo II de los mismos autores, el cual impone la estabilidad del umbral, solo fue mejor en una estación. Tomar en cuenta $\operatorname{logit}\hat\zeta$ expresa que las condiciones que hacen probable un episodio también lo hacen más intenso. Por lo tanto, en el modelo final, ajustado a los excesos del máximo diario, la escala es:
+\begin{equation}
+\log\sigma_{s,t} = b_0 + b_1\operatorname{logit}\hat\zeta_{s,t} + b_2\,g_1(\operatorname{logit}\hat\zeta_{s,t}) + b_3\,g_2(\operatorname{logit}\hat\zeta_{s,t}),
+\label{eq:gpd_final}
+\end{equation}
+donde $g_1, g_2$ son términos de un \textit{spline} cúbico restringido, para que tampoco esta parte suponga linealidad, y $\xi$ es común a todas las estaciones. Los parámetros se estimaron por máxima verosimilitud (Nelder--Mead y luego BFGS), partiendo del modelo anidado más simple para que agregar covariables nunca empeore la verosimilitud (los errores estándar salen de la hessiana numérica).
+
+Sustituyendo $\hat\zeta$, $\hat\sigma$ y $\hat\xi$ en la ecuación~\eqref{eq:dos_partes} se obtiene $P(X>c)$ para cualquier $c>u$. Se emite una alerta si $P(X>90)\geq\tau$. El corte de $\tau$ se fijó en 2025 como el más alto que detecta 70\,\% de los días con exceso y se aplicó sin cambios en 2026.
+
+\subsection{Dependencia de colas entre estaciones}
+\label{sec:mod-dependencia}
+
+Con le objetivo de conocer las estaciones que comparten episodios extremos se usaron máximos diarios de O$_3$, transformados a escala uniforme por rangos ($U_1$, $U_2$). La correlación mide asociación en toda la distribución, por lo que se usó el coeficiente de dependencia de colas  \citep{coles1999}, $\chi(q) = P(U_2 > q \mid U_1 > q)$, el cual mide la probabilidad de que una estación tenga un extremo dado que otra lo tiene, junto con $\bar\chi(q)$, que distingue si esa dependencia se mantiene en los valores más altos. Sus intervalos se obtuvieron con bootstrap por bloques de 7 días para respetar la dependencia temporal. Con la matriz de  $1-\chi(0.95)$ como distancia se aplicó un análisis de conglomerados jerárquico, técnicna de análisis de relaciones de interdependencia para agrupar las estaciones que se activan juntas. Finalmente, la relación entre la distancia geográfica y $1-\chi$ se evalúa con la prueba de Mantel \citep{mantel1967}, la cual compara dos matrices de distancia mediante permutaciones. 
+
+
+\section{Validación}
+
+\textbf{Esquema general.} Los modelos se validaron con partición cronológica: entrenamiento 2023--2024, validación 2025 (para elegir modelos e hiperparámetros) y prueba de enero a julio de 2026, solo para reportar. En cada uno se revisaron los supuestos que sustentan su interpretación y se evaluó su capacidad predictiva. Las probabilidades se evaluaron con el \textit{Brier skill score} ($\mathrm{BSS} = 1 - \mathrm{Brier}/\mathrm{Brier}_{\mathrm{ref}}$), con la climatología como referencia (frecuencia de excedencia de entrenamiento por estación). Un BSS mayor que 0 significa que el modelo sabe algo que la climatología no. También se usaron el AUC, diagramas de calibración y, para las alertas, los aciertos (excesos detectados) y la razón de falsas alarmas (alertas que no terminaron en exceso). Los modelos anidados se compararon con razón de verosimilitudes, prueba de Wald robusta y AIC. Los errores estándar se agruparon por fecha porque las estaciones de un mismo día están correlacionadas.
+
+% Valicación de supuestos
+
+\subsection{Red neuronal para grafos (descartada)}
+\label{sec:val-gcn}
+% ¿Por qué se descartó?
+La GCN--DeepGPD se comparó contra una GPD constante, con un solo $(\xi,\sigma)$ para todos los excesos de entrenamiento (Tabla~\ref{tab:gcn}). En O$_3$, la red mejora la log-verosimilitud negativa en entrenamiento (3.697 contra 3.740), pero la ventaja desaparece en validación (3.809 contra 3.808). El AUC cae de 0.709 a 0.585 en 2025 y a 0.580 en 2026. En SO$_2$, con apenas 687 excesos de entrenamiento, hay sobreajuste: el Brier de la red es peor que el de la frecuencia (0.0665 contra 0.0508 en 2025) y el AUC en 2026 es 0.495.
+
+\begin{table}[!htbp]
+\centering
+\caption{Comparación de la red GCN--DeepGPD contra una GPD constante en O$_3$ y SO$_2$. NLL: log-verosimilitud negativa por exceso. Entre paréntesis, el valor de la referencia (GPD constante para la NLL y frecuencia de entrenamiento para el Brier).}
+\label{tab:gcn}
+\small
+\begin{tabular}{llccc}
+\toprule
+Contaminante & Periodo & NLL red (GPD const.) & Brier red (frecuencia) & AUC red \\
+\midrule
+O$_3$  & Entrenamiento & 3.697 (3.740) & 0.1310 (0.1407) & 0.709 \\
+O$_3$  & 2025          & 3.809 (3.808) & 0.1596 (0.1627) & 0.585 \\
+O$_3$  & 2026          & 3.820 (3.822) & 0.1653 (0.1691) & 0.580 \\
+SO$_2$ & Entrenamiento & 3.375 (3.681) & 0.0366 (0.0431) & 0.912 \\
+SO$_2$ & 2025          & 4.297 (3.730) & 0.0665 (0.0508) & 0.577 \\
+SO$_2$ & 2026          & 3.743 (3.514) & 0.0303 (0.0285) & 0.495 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Tampoco recuperó la estructura por estación. Para O$_3$, la correlación entre los $\xi$ observados y los de la red es 0.05. La prueba de Mantel entre distancias de parámetros y distancias geográficas da $r=-0.017$ ($p=0.514$) para la red y $r=0.377$ ($p=0.006$) para los parámetros observados.
+
+La red se descartó por tres razones: (i) su ventaja sobre la GPD constante no se sostiene fuera de la muestra, (ii) sobreajusta cuando hay pocos excesos y (iii) no aprendió diferencias espaciales entre estaciones. Con 15 nodos y 730 días de entrenamiento, frente a las 1,112 estaciones y 44 años de \citet{wilson2022deepgpd}, era de esperarse. El componente espacial se resolvió con la dependencia de colas (sección~\ref{sec:dependencia}).
+
+
+\subsection{Regresión Logística}
+\label{sec:val-logit}
+% ¿Por qué no hay interpretabilidad? ¿qué no se cumple? / También, validación de componentes, luego pasó esa parte
+\textbf{Validación de los componentes.} La meteorología se resumió con un análisis de componentes principales (ACP), técnica de interdependencia calculada solo con datos de entrenamiento. La prueba de Bartlett rechazó que las ocho variables sean independientes ($\chi^2=194{,}517$; 28 gl; $p<0.001$) y el KMO fue 0.714, aceptable. La regla de Kaiser sugiere tres componentes, pero se conservaron cinco (78.3\% de la varianza) para pasar del 70\%. Esta parte se cumple.
+
+\textbf{Selección de covariables.} Se compararon cuatro conjuntos: persistencia, $+$ calendario, $+$ meteorología y $+$ ACP. El modelo final de $\zeta = P(X_{t+24}>u)$ usa persistencia $+$ calendario $+$ ACP. Según la razón de verosimilitudes por bloque, el calendario es lo que más pesa ($D=6{,}273$), seguido de la meteorología (602) y el ACP (391). En 2025, el BSS subió de 0.098 con persistencia a 0.157 con el modelo final, y en 2026 fue 0.132.
+
+\textbf{Por qué no hay interpretabilidad.} El modelo predice mejor que la climatología, pero sus coeficientes no pueden interpretarse con confianza porque no se cumplen varios supuestos (Tabla~\ref{tab:supuestos}). Primero, la linealidad en el logit falla: el cuadrado de $x_t$ es significativo en 12 de 15 estaciones, así que el efecto del ozono actual es una curva y un solo coeficiente la resume mal. No se corrige agregando cuadrados, porque estos empeoran la predicción de $P(X>90)$ (BSS de 0.101 a 0.089 en 2025 y de 0.084 a 0.058 en 2026). Segundo, hay multicolinealidad en NE2, NO3, NTE y SE2, con VIF de 9 a 19, en estaciones cuyo pluviómetro casi no registró lluvia. Ahí los coeficientes son inestables. Además, los coeficientes de la meteorología pertenecen a componentes que mezclan varias variables, no a variables físicas individuales. Tercero, los residuales se correlacionan con la hora anterior (0.13 a 0.57); sin corrección, los errores estándar usuales serían demasiado pequeños, y agrupados por día resultan 1.1 a 1.8 veces mayores. En cambio, no hay observaciones influyentes (distancia de Cook máxima de 0.24). Estas limitaciones llevan al GAM.
+
+\begin{table}[!htbp]
+\centering
+\caption{Validación de los componentes y de los supuestos de la regresión logística horaria por estación.}
+\label{tab:supuestos}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.9cm}>{\raggedright\arraybackslash}p{3.1cm}>{\raggedright\arraybackslash}Xc}
+\toprule
+Aspecto & Criterio & Resultado & ¿Se cumple? \\
+\midrule
+Componentes principales & Bartlett y KMO $>0.7$ & $p<0.001$; KMO $=0.714$ & Sí \\
+Linealidad en el logit & Término cuadrático por variable & Significativo para $x_t$ en 12 de 15 estaciones & No \\
+Multicolinealidad & VIF $<5$ & Se cumple en 10 de 15 estaciones; VIF de 9 a 19 en NE2, NO3, NTE y SE2 & Parcial \\
+Independencia & Autocorrelación de los residuales & 0.13 a 0.57 con la hora anterior; se corrige con errores estándar agrupados por día & No \\
+Observaciones influyentes & Distancia de Cook & Máximo de 0.24, ninguna mayor que 1 & Sí \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Modelo aditivo generalizado}
+\label{sec:val-gam}
+El GAM predice $\zeta = P(\text{máximo de mañana} > 63\ \text{ppb})$ con un solo modelo para las 15 estaciones: un efecto fijo por estación y una curva suave por variable continua. La penalización se eligió con 2025 ($\alpha=1000$, $\approx 57$ grados de libertad efectivos), y no con GCV/UBRE porque suponen observaciones independientes. La no linealidad se probó con splines de regresión y Wald robusto agrupado por fecha. Los términos no lineales son significativos en conjunto (Wald $=107.1$; 22 gl; $p=3.6\times10^{-13}$) y el AIC baja de 8,807 a 8,514. El detalle por variable aparece en la Tabla~\ref{tab:variables}. En los residuales agrupados por deciles (Figura~\ref{fig:residuales}), el GAM deja 1 de 110 grupos fuera de $\pm2$ errores estándar y el modelo lineal 6 (por azar se esperarían $\approx 5$). Este diagnóstico solo no basta para rechazar el modelo lineal: la evidencia formal es la prueba de Wald.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{figuras/final_residuales_agrupados.png}
+\caption{Residual promedio ($y-p$) por deciles de tres variables, para el modelo lineal y el GAM penalizado (entrenamiento). La banda gris corresponde a $\pm2$ errores estándar, agrupados por fecha.}
+\label{fig:residuales}
+\end{figure}
+
+Las tres temperaturas originales tenían correlaciones de 0.76 a 0.84, así que se reexpresaron como nivel, cambio (mañana $-$ hoy) y rango, con lo que el VIF máximo del clima baja de 5.3 a 3.0. Las variables de ozono siguen relacionadas entre sí (concurvidad de 0.64 a 0.86) y se interpretan juntas como un bloque de persistencia del episodio. Los residuales casi no tienen autocorrelación temporal (medias por rezago entre $-0.05$ y $0.07$), pero sí se correlacionan entre estaciones el mismo día (0.33 en promedio), que es otra razón para agrupar por fecha.
+
+
+\subsection{Modelo para la estimación de parámetros de la distribución generalizada de Pareto}
+\label{sec:val-gpd}
+% Validación de umbral y de supuestos (qqplot)
+La GPD se ajusta a los excesos sobre $u$ con $\log\sigma$ dependiente de covariables \citep{coles2001}, y se combina con $\zeta$ en el modelo de dos partes de \citet{gyarmati2017}.
+
+\textbf{Validación del umbral.} El umbral $u=63$ ppb es el percentil 95.1 del O$_3$ de entrenamiento (12,372 excesos horarios). Entre 59 y 67 ppb el exceso medio es casi lineal, $\xi$ varía poco ($-0.051$ a $-0.056$) y la escala modificada $\sigma^*$ queda en 20--20.6, lo que respalda la aproximación GPD. Veáse anexo~\ref{anexo:umbral} para gráficos que validan este análisis.
+
+\textbf{Validación de supuestos.} La GPD supone excesos independientes, por lo que en el modelo horario por estación se ajustó solo a los picos de episodios definidos por rachas con $r=24$ h (51 a 116 episodios por estación). Con $r$ entre 3 y 12 h los resultados son idénticos, y con 24 h el índice extremal baja de 0.29 a 0.13 mientras $\xi$ casi no cambia. En esas estaciones, $\xi$ es negativo en 12 de 15 (cola acotada, coherente con el O$_3$), la meteorología mejora a la GPD estacionaria en 11 de 15 y $\mathrm{logit}\,\zeta$ en $\sigma$ es positivo y significativo en 14 de 15 estaciones.
+
+El modelo diario final se ajustó con 3,397 excesos, con $\log\sigma = b_0 + b_1\,\mathrm{logit}\,\hat{\zeta} + \text{spline}(\mathrm{logit}\,\hat{\zeta})$ y $\xi$ constante. Agregar $\mathrm{logit}\,\hat{\zeta}$ mejora el ajuste ($D=658.6$; 1 gl; $p<10^{-140}$) y multiplica $\sigma$ por 1.46 por cada unidad. La relación no es lineal ($D=59.6$; 2 gl; $p=1.2\times10^{-13}$), por eso se usó el spline, y $\xi=-0.079$ (EE 0.007). En el QQ de residuales contra una exponencial(1) (Figura~\ref{fig:qq}), la mayoría de los puntos sigue la línea y los picos más altos quedan por encima (uno de $\approx 23$ contra $\approx 9$ esperado), así que el modelo subestima los eventos más extremos. Además, los dos ajustes (GAM y GPD) se hacen en cadena y el error de $\hat{\zeta}$ no se propaga a los errores estándar de la GPD.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.38\textwidth]{figuras/final_qq_diaria.png}
+\caption{Gráfica QQ de los residuales de la GPD diaria contra una distribución exponencial(1).}
+\label{fig:qq}
+\end{figure}
+
+\section{Resultados}
+
+\subsection{Comparación de modelos}
+\label{sec:comparacion}
+% No mencionar regresión logística aquí, dejarla hasta "Poder predictivo". Dejar esta parte para \zeta y todas las variables del modelo.
+La primera parte del modelo estima $\zeta$, la probabilidad de que el máximo de mañana supere 63 ppb. Frente a la climatología, el GAM penalizado tiene un BSS de $\zeta$ de 0.362 en 2025 y de 0.333 en 2026. Las alternativas dan prácticamente lo mismo: los splines de regresión (0.362 y 0.333) y el GAM con el clima resumido en ACP (0.356 y 0.340). El resultado no depende, entonces, de la penalización ni de cómo se traten las variables climáticas correlacionadas. Para $P(\text{máximo de mañana}>90\ \text{ppb})$, el GAM con la GPD alcanza BSS de 0.224 en 2025 y 0.251 en 2026, y AUC de 0.869 y 0.884, contra 0.664 y 0.643 de la climatología. El \textit{gradient boosting}, que no impone ninguna forma funcional, no lo supera (BSS de 0.214 y 0.236), lo que sugiere que el límite está en la información disponible y no en la forma del modelo.
+
+El modelo usa 11 variables continuas, cada una con su propia curva, más el mes de mañana (seno y coseno), sábado, domingo y la estación, que entran de forma lineal. La Tabla~\ref{tab:variables} muestra cuáles tienen un efecto no lineal. Lo tienen el ozono máximo de hoy, el viento medio, la temperatura máxima pronosticada, las horas sobre 63 ppb en la semana y el cambio de temperatura. Para las demás no hay evidencia de no linealidad, pero se mantienen en el modelo porque aportan información en bloque.
+
+\begin{table}[!htbp]
+\centering
+\caption{Variables continuas del GAM para $\zeta$ y prueba de no linealidad de cada una (Wald robusto agrupado por fecha, 2 gl).}
+\label{tab:variables}
+\small
+\begin{tabular}{@{}p{3.1cm}p{7.4cm}cc@{}}
+\toprule
+Variable & Descripción & Wald & $p$ \\
+\midrule
+\texttt{o3max}        & Ozono máximo de hoy                                  & 27.8 & $<0.001$ \\
+\texttt{o3media}      & Ozono medio de hoy                                   & 3.7  & 0.155 \\
+\texttt{horas63}      & Horas sobre 63 ppb hoy                               & 0.4  & 0.828 \\
+\texttt{horas63\_7d}  & Horas sobre 63 ppb en los últimos 7 días             & 8.6  & 0.013 \\
+\texttt{o3max\_ciudad}& Promedio de las 15 estaciones del máximo de hoy      & 2.8  & 0.244 \\
+\midrule
+\texttt{SR\_max\_hoy} & Radiación solar máxima de hoy                        & 4.1  & 0.126 \\
+\texttt{RH\_media\_hoy}& Humedad relativa media de hoy                       & 4.8  & 0.090 \\
+\texttt{WSR\_media\_hoy}& Velocidad media del viento de hoy                  & 14.6 & $<0.001$ \\
+\midrule
+\texttt{T\_max\_pron} & Temperatura máxima pronosticada para mañana          & 11.8 & 0.003 \\
+\texttt{dT\_pron}     & Cambio: temperatura máxima pronosticada $-$ máxima de hoy & 7.2 & 0.027 \\
+\texttt{rango\_pron}  & Rango pronosticado: máxima $-$ mínima                & 0.1  & 0.930 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Frente al modelo horario por estación (BSS de $P(X>90)$ de 0.101 en 2025 y 0.084 en 2026; el objetivo y la base no son idénticos), la mejora viene de predecir el máximo diario y de agregar la temperatura pronosticada con un día de antelación \citep{zippenfenig_open_meteo_2023}. En la extensión horaria, esa temperatura subió el BSS de 0.102 a 0.147 en 2025 y de 0.085 a 0.134 en 2026. Lo que no funcionó fue la GCN (sección~\ref{sec:val-gcn}), los términos cuadráticos en el modelo horario y los precursores NO$_x$/CO, que bajaron el BSS de 0.139 a 0.133.
+
+
+\subsection{Influencia de predictores}
+\label{sec:influencia}
+Con las demás variables en su mediana (Figura~\ref{fig:curvas}), el efecto del ozono máximo de hoy sobre $\mathrm{logit}\,\zeta$ sube de $\approx -2.1$ con 18 ppb a $\approx +0.75$ hacia 100 ppb y ahí se aplana, lo que refleja la persistencia del episodio. La temperatura máxima pronosticada sube de $\approx -2.9$ con 14\,$^\circ$C a $\approx +1.4$ con 43\,$^\circ$C, con un estancamiento entre 30 y 36\,$^\circ$C. El cambio de temperatura respecto a hoy es plano ($\approx -0.45$) mientras mañana no sea más cálido y luego sube hasta $\approx +0.55$ con $+11$\,$^\circ$C. El viento medio de hoy baja de $\approx +0.85$ con 2.7 km/h a $\approx -0.6$ con 16 km/h, porque dispersa el ozono. Estos valores son aproximados, leídos de la gráfica, y no incluyen bandas de incertidumbre. El tamaño del exceso también depende de $\zeta$: por cada unidad de $\mathrm{logit}\,\zeta$, $\sigma$ se multiplica por 1.46, es decir, los días con más riesgo de superar 63 ppb son también aquellos en que se llega más alto.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{figuras/final_gam_curvas.png}
+\caption{Efecto de cada variable sobre $\mathrm{logit}\,\zeta$ en el GAM, con las demás variables en su mediana: ozono máximo de hoy (\texttt{o3max}), temperatura máxima pronosticada (\texttt{T\_max\_pron}), cambio de temperatura respecto a hoy (\texttt{dT\_pron}) y viento medio de hoy (\texttt{WSR\_media\_hoy}).}
+\label{fig:curvas}
+\end{figure}
+
+El modelo horario en la estación SUR muestra el mismo patrón: la probabilidad de que un pico supere 90 ppb pasa de 0.17 (temperatura en su percentil 10) a 0.53 (percentil 90), y de 0.42 (viento en el percentil 10) a 0.21 (percentil 90). Por bloques, el calendario pesa más que la meteorología ($D$ de 6,273 contra 602), lo que cuadra con que el O$_3$ solo rebasa la norma por las tardes y sobre todo de febrero a junio.
+
+
+\subsection{Dependencia entre estaciones}
+\label{sec:dependencia}
+La dependencia de colas se estimó con los máximos diarios de O$_3$ de 2023--2025 (días con al menos 18 horas medidas), transformados a escala uniforme por rangos. Se calcularon $\chi(q)$ y $\bar{\chi}(q)$ con \textit{bootstrap} de bloques de 7 días. En los pares de ejemplo (SO--SO$_2$ a 5 km, NO$_2$--SE3 a 63 km, SE3--SUR a 28 km), $\chi(q)$ queda por encima de la línea de independencia y $\bar{\chi}(q)$ es positivo y no tiende a cero. Hay, por tanto, dependencia asintótica: cuando una estación vive un extremo, otras también. Las bandas son anchas porque hay pocos días conjuntos (9 en el par con menos).
+
+En la matriz $\chi(0.95)$ (Figura~\ref{fig:chi_matriz}), los valores más altos son NO--NTE (0.80), NE--NTE (0.78) y SO--SO$_2$ (0.71), y los más bajos los de NE2 con SUR y SO$_2$ (0.20). El dendrograma con $1-\chi$ deja a NE2, NO3 y NE3 como las estaciones menos dependientes del resto. La prueba de Mantel entre distancia y $1-\chi$ da $r=0.531$ ($p=0.0005$), y la estacionalidad común no lo explica ($\chi$ medio de 0.476 con todo el año y 0.484 solo en temporada; Figura~\ref{fig:chi_dist}). Pesan, entonces, la cercanía física y la dispersión de los contaminantes.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{figuras/final_chi_matriz.png}
+\caption{Dependencia de colas entre estaciones con máximos diarios de O$_3$ (2023--2025): matriz $\chi(0.95)$, correlación de Spearman y dendrograma con $1-\chi$.}
+\label{fig:chi_matriz}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.92\textwidth]{figuras/final_chi_distancia.png}
+\caption{Izquierda: $\chi(0.95)$ contra la distancia entre estaciones; el color indica la alineación del par con el viento (Mantel $r=0.53$). Derecha: $\chi$ calculado solo en temporada contra $\chi$ de todo el año.}
+\label{fig:chi_dist}
+\end{figure}
+
+El viento sopla casi siempre hacia el oeste (275.4$^\circ$). Dentro de la temporada, con $q=0.90$, $\chi$ es mayor con viento a favor en 8 de 10 pares, pero la prueba del signo no es significativa ($p=0.109$). En el par SE3--SUR, el desfase sugiere transporte de este a oeste ($\chi\approx0.51$ a 1 h en el sentido SE3$\rightarrow$SUR), aunque con un solo par es solo una pista.
+
+
+\subsection{Poder predictivo}
+\label{sec:poder}
+La Tabla~\ref{tab:comparacion} compara los modelos diarios en $P(\text{máximo de mañana}>90\ \text{ppb})$. Todos superan con claridad a la climatología (BSS de 0.20 a 0.26 y AUC de $\approx 0.88$--$0.89$, contra 0.64--0.66). Con el corte fijado en 2025 para detectar $\approx 70\%$ de los días con exceso, el GAM detecta 68.8\% en 2026 con 61.3\% de falsas alarmas, contra 84.1\% de la climatología con la misma meta.
+
+\begin{table}[!htbp]
+\centering
+\caption{Comparación de modelos diarios para $P(\text{máximo de mañana}>90\ \text{ppb})$. El BSS usa como referencia la climatología por estación. Aciertos y falsas alarmas corresponden a 2026, con el corte de alerta fijado en 2025 para detectar $\approx 70\%$ de los días con exceso.}
+\label{tab:comparacion}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}p{4.6cm}cccccc@{}}
+\toprule
+Modelo & BSS 2025 & BSS 2026 & AUC 2025 & AUC 2026 & Aciertos & Falsas alarmas \\
+\midrule
+Climatología                   & 0     & 0     & 0.664 & 0.643 & 66.9\% & 84.1\% \\
+Regresión logística + GPD      & 0.202 & 0.252 & 0.863 & 0.890 & 70.3\% & 62.1\% \\
+Splines de regresión + GPD     & 0.221 & 0.250 & 0.870 & 0.886 & 68.0\% & 60.5\% \\
+\textbf{GAM + GPD (final)}     & \textbf{0.224} & 0.251 & 0.869 & 0.884 & 68.8\% & 61.3\% \\
+GAM con clima en ACP + GPD     & 0.212 & 0.257 & 0.866 & 0.883 & 71.4\% & 60.7\% \\
+\textit{Boosting} directo      & 0.214 & 0.236 & 0.878 & 0.880 & 70.8\% & 59.3\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La regresión logística con la GPD queda prácticamente igual que el GAM. En validación el GAM es mejor (BSS de 0.224 contra 0.202) y en prueba no hay diferencia (0.251 contra 0.252). Sus aciertos y falsas alarmas son 70.3\% y 62.1\%, contra 68.8\% y 61.3\% del GAM. Lo que respalda al GAM, entonces, es que cumple los supuestos verificados en la sección~\ref{sec:val-gam} y permite interpretar el efecto de cada variable (sección~\ref{sec:influencia}), no que prediga mejor.
+
+En la matriz de confusión del GAM en 2026 (Figura~\ref{fig:poder}; alerta si $p>0.30$, exceso real $\geq 90$ ppb) hay VN $=2{,}664$, FP $=140$, FN $=206$ y VP $=170$. La exactitud es 89.1\%, la precisión 54.8\% y la sensibilidad 45.2\%. Bajar el corte sube la sensibilidad a costa de más falsas alarmas, por lo que SIMA debe definirlo según lo que cueste una falsa alarma frente a un exceso no detectado. En la extensión horaria, casi dos de cada tres alertas ``falsas'' fueron días con O$_3$ por encima de 63 ppb.
+
+El GAM sigue la diagonal de calibración hasta $\approx 0.25$ y por encima subestima (donde predice $\approx 0.38$ ocurre $\approx 0.47$), pues 2026 tuvo más ozono que los años de entrenamiento. Como la GPD se ajusta una sola vez, el mismo modelo estima la probabilidad de superar otros niveles: subestima ligeramente entre 80 y 95 ppb, acierta en 105 ppb (136 observados contra 145 esperados) y sobrestima en 120 ppb (50 contra 75), con AUC de 0.88 a 0.90.
+
+\begin{figure}[!htbp]
+\centering
+\begin{minipage}[c]{0.30\textwidth}
+\centering
+\includegraphics[width=\textwidth]{figuras/confmat_gam.png}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.67\textwidth}
+\centering
+\includegraphics[width=\textwidth]{figuras/final_diario_calibracion_niveles.png}
+\end{minipage}
+\caption{Poder predictivo del GAM en 2026. Izquierda: matriz de confusión (alerta si $p>0.30$; exceso real $\geq 90$ ppb). Derecha: calibración de la probabilidad de superar 90 ppb (panel izquierdo) y estación-días observados y esperados por encima de distintos niveles (panel derecho).}
+\label{fig:poder}
+\end{figure}
+
+El desempeño varía mucho entre estaciones (en el modelo horario el BSS de 2026 va de $\approx 0$ en NE2 y NE3, con 6 y 8 eventos, a 0.15 en SO$_2$). Además, 2026 cubre solo de enero a julio y las métricas no tienen intervalos de incertidumbre. El modelo puede apoyar un sistema de alerta temprana si se prioriza la sensibilidad y se acepta un nivel alto de falsas alarmas.
+
+\section{Discusión y conclusiones}
+
+El uso del modelo aditivo generalizado (GAM) fue determinante para los resultados obtenidos en este trabajo. Por un lado, tuvo un mayor poder predictivo ($\text{BSS} = 0.224$ y $\text{BSS} = 0.257$, respectivamente) para los datos de validación y de prueba (es decir, 2025 y los primeros 7 meses de 2026), aunque para el segundo conjunto de datos, el modelo que generó mejores resultados fue la versión del modelo que utiliza componentes principales de la variables climatológicas y solo si se toma el BSS como métrica. Y, la otra gran ventaja de este modelo, es que, al no asumir linealidad de las variables a diferencia de la regresión logísitica, supera las pruebas estadísticas que resultan en la explicabilidad de sus predictores (veáse figura~\ref{fig:curvas}), sin mencionar que esta es una interpretación más rica de los mismos.
+
+Si bien el AUC del GAM que las otras alternativas fue mayor (como se puede ver en la tabla~\ref{tab:comparacion}), esto solo ocurre si no se agrupan las estaciones por día. En caso de llevar a cabo esta agrupación, el poder predictivo de la regresión logística es mayor (veáse anexo~\ref{anexo:agrupados_por_dia}). Dado que se estableció que existe dependencia entre los excesos de distintas estaciones (seccion~\ref{sec:dependencia}), las alertas de una estación deberían de ser emitidas para toda el área metropolitana. Por lo tanto, si se considera este mecanismo de emisión de alerta, la regresión logística es mejor que el GAM.
+
+Un análisis más detallado sobré porque el GAM es mejor para una formulación del problema, pero peor para otra es una pregunta válida que surge de estos resultados y que sería interesante esclarecer para mejorar el modelo. De igual manera, un análisis más robusto sobre las dependencias entre estaciones o la incorporación de relaciones entre estaciones en el modelo podrían ser útiles para su mejoría y para evitar que excesos locales se vuelvan alertas para toda el área metropolitana.
+
+En conclusión, los modelos desarrollados combinan regresiones logísitcas o GAMs con la teoría de valores extremos para predecir los excesos de ozono con un día de anticipación en el área metropolitana de Monterrey. Se concluye que estas son soluciones robustas por todas las validación y comparaciones llevadas a cabo en el curso de este proyecto. Por último, se recomienda explorar los motivos para los distintos resultados de los modelos según la formulación del problema, así como definir dicha formulación con el socio formador e indagar con mayor profundida sobre las dependencias entre las estaciones, ya que son relevantes para la misma.
+
+\pagebreak
+ 
+\appendix
+
+\section{Rango de datos válidos}
+\label{anexo:rango_valido}
+
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{l l X l}
+\toprule
+\textbf{Código} & \textbf{Variable} & \textbf{Rango válido / Regla de corte} & \textbf{Tratamiento} \\
+\midrule
+\texttt{RH}    & Humedad Relativa         & $> 105\%$                          & \texttt{NaN} \\
+               &                           & Topado a $100\%$                  & Topar \\
+\texttt{TOUT}  & Temperatura       & $-10^\circ\text{C} \le \text{TOUT} \le 50^\circ\text{C}$ & \texttt{NaN} \\
+\texttt{WDR}   & Dirección del viento            & $0^\circ \le \text{WDR} \le 360^\circ$ & \texttt{NaN} \\
+\texttt{SR}    & Radiación Solar           & $> 1.5$                            & \texttt{NaN} \\
+\texttt{PRS}   & Presión atmásferica      & $650 \le \text{PRS} \le 780$       & \texttt{NaN} \\
+\texttt{WSR}   & Velocidad del viento               & $> 150$                            & \texttt{NaN} \\
+\texttt{RAINF} & Precipitación                  & $> 100$                            & \texttt{NaN} \\
+\bottomrule
+\end{tabularx}
+\caption{Summary of filtering thresholds and transformation actions applied to raw sensor measurements.}
+\label{tab:sensor_cutoffs}
+\end{table}
+
+\section{Distribución generalizada de Pareto por declustering}
+\label{anexo:declustering}
+
+\begin{figure}[H]
+\centering
+\begin{minipage}[t]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figuras/declustering/xi.png}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figuras/declustering/sigma.png}
+\end{minipage}
+\caption{Parámetro de forma $\xi$ (izquierda) e parámetro de escala $\sigma$(derecha) para distintos valores de $r$ en el conjunto de entrenamiento.}
+\label{fig:declustering_gpd}
+\end{figure}
+
+\section{Validación de umbral}
+\label{anexo:umbral}
+
+En esta sección, se incluyen gráficos para respaldar la validación de selección de umbral en el cuerpo del reporte.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figuras/fig_umbral.png}
+\caption{Media de exceso dado el umbral (izquierda), valor de $\xi$ según el umbral (centro) y valor de $\sigma$. Distribuciones ajustadas sobre datos sin hacer \textit{declustering} o separar por estación.}
+\label{fig:umbral2}
+\end{figure}
+
+\section{Predicción de excesos agrupados por día}
+\label{anexo:agrupados_por_dia}
+
+En esta sección, se consideran los resultados de los modelos agrupando sus predicciones por día. Dado que se encontró dependencia asintótica entre las estaciones y que se desconoce la causalidad de los excesos de cada estación, esta es una formulación más adecuada para la formulación del socio formador. Es decir, esta formulación considera que si se predice un exceso en una estación, se emite una alerta para toda el área metropolitana de monterrey.
+
+\begin{figure}[H]
+\centering
+\begin{minipage}[t]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figuras/Agrupados_por_dia/confmat_gam_daily.png}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figuras/Agrupados_por_dia/roc_curve_gam_daily.png}
+\end{minipage}
+\caption{Matriz de confusión (izquierda) y curva ROC (derecha) para las predicciones del \textit{GAM + Modelo GPD} una vez son agrupadas por día (sin importar la estación).}
+\label{fig:mat_conf}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{minipage}[t]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figuras/Agrupados_por_dia/confmat_logreg_daily.png}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figuras/Agrupados_por_dia/roc_curve_logreg_daily.png}
+\end{minipage}
+\caption{Matriz de confusión (izquierda) y curva ROC (derecha) para las predicciones de la \textit{Regresión logística + Modelo GPD} una vez son agrupadas por día (sin importar la estación).}
+\label{fig:curvas_roc}
+\end{figure}
+
+\section{GitHub}
+
+El código usado para la preparación de los datos en este trabajo puede ser accedido mediante el siguiente vínculo:
+
+\url{https://github.com/RicardoSalgadoB/MultiReto}
+
+\section{Declaratoria del uso de IA}
+
+- Herramienta: Claude (Anthropic)
+
+- Uso realizado: Se apoyó de la inteligencia artificial para planear el contenido del reporte separado por secciones, además de apoyo en redacción en algunas partes.
+
+- Secciones donde se utilizó: Se planeó el contenido de cada sección. Se usó de apoyo en la redacción de Validación, Resultados y Modelos; se corrigió ortografía y errores de compilación 
+
+- Validación realizada: Se verificó las secciones propuestas con lo pedido en la rúbrica.
+
+- El contenido final fue revisado y verificado, además se asume la responsabilidad de lo entregado
+
+
+
+
+\pagebreak
+
+\nocite{*}
+\bibliographystyle{apacite}
+\bibliography{references}
+\end{document}
