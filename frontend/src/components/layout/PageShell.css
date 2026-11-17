@@ -1,0 +1,96 @@
+/* Contenedor de página: ancho máximo, márgenes laterales fluidos y ritmo vertical uniforme */
+.page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: calc(var(--page-max) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding: var(--space-5) var(--gutter) var(--space-6);
+}
+
+.page-header h1 {
+  margin: 0 0 var(--space-1);
+}
+
+.page-description {
+  max-width: 62ch;
+  color: var(--fg-muted);
+}
+
+/* Barra de controles bajo el encabezado */
+.page-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+/* Rejilla: [sidebar] mapa [panel]. Por debajo de 769 px todo se apila */
+.page-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.page-map {
+  min-width: 0;
+}
+
+/* Los bloques de la zona principal se apilan con separación uniforme */
+.page-map > * + * {
+  margin-top: var(--space-3);
+}
+
+.page-sidebar,
+.page-panel {
+  min-width: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+@media (min-width: 769px) {
+  .page-body[data-sidebar] {
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .page-body[data-panel] {
+    grid-template-columns: minmax(0, 1fr) var(--panel-w);
+  }
+
+  .page-body[data-sidebar][data-panel] {
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr) var(--panel-w);
+  }
+}
+
+/* Resumen bajo el encabezado y sobre el mapa */
+.map-caption {
+  font-size: var(--text-sm);
+  color: var(--fg-muted);
+}
+
+.map-caption strong {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--fg);
+}
+
+/* Lista de enlaces de la página 404 */
+.empty-links ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}

@@ -1,0 +1,89 @@
+.wind-dial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.wind-dial-label {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--fg);
+}
+
+.wind-dial-control {
+  border-radius: 50%;
+}
+
+.wind-dial-control:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* touch-action: none evita que arrastrar el dial desplace la página en móvil */
+.wind-dial-svg {
+  display: block;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+
+.wind-dial-svg:active {
+  cursor: grabbing;
+}
+
+.dial-face {
+  fill: var(--surface);
+  stroke: var(--control-border);
+  stroke-width: 1.5;
+}
+
+.dial-tick {
+  stroke: var(--chart-axis);
+  stroke-width: 1;
+}
+
+.dial-tick--major {
+  stroke-width: 2;
+}
+
+.dial-letter {
+  fill: var(--fg);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+
+.dial-needle {
+  stroke: var(--ink);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.dial-tip {
+  fill: var(--ink);
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+
+.dial-hub {
+  fill: var(--fg);
+}
+
+.wind-dial-value {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+/* Aviso permanente: «no afecta la predicción» (.callout--warn) */
+.wind-dial-note {
+  width: 100%;
+  text-align: left;
+}

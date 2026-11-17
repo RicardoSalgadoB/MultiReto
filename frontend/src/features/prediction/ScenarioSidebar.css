@@ -1,0 +1,98 @@
+.scenario-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.sidebar-title {
+  margin: 0;
+}
+
+.sidebar-count {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--fg-muted);
+}
+
+/* Botón del sidebar en pantallas angostas: un botón normal a todo el ancho con el conteo y un chevron que gira */
+.sidebar-toggle {
+  display: none;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 3rem;
+  padding: 0 var(--space-4);
+  text-align: left;
+}
+
+.toggle-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.25;
+}
+
+.toggle-count {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-regular);
+  color: var(--fg-muted);
+}
+
+.toggle-chevron {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  transition: transform var(--motion-base) var(--ease);
+}
+
+.sidebar-toggle[aria-expanded="true"] .toggle-chevron {
+  transform: rotate(180deg);
+}
+
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.base-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--fg);
+}
+
+.base-field input {
+  align-self: flex-start;
+}
+
+.reset-button {
+  align-self: flex-start;
+}
+
+.sidebar-intro {
+  margin-top: var(--space-1);
+}
+
+.controls-list {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--space-2);
+}
+
+/* En pantallas angostas el sidebar queda cerrado y solo se ve el botón con el conteo de cambios */
+@media (max-width: 768px) {
+  .sidebar-toggle {
+    display: flex;
+  }
+
+  .sidebar-title,
+  .sidebar-count {
+    display: none;
+  }
+
+  .sidebar-content:not([data-open]) {
+    display: none;
+  }
+}

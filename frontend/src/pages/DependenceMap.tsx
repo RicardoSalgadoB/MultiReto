@@ -1,3 +1,8 @@
+import { usePageTitle } from "../hooks/usePageTitle";
+import DependenceView from "../features/dependence/DependenceView";
+
+/** Tab 3. Los datos de dependencia se piden por medida (ver DependenceView). */
 export default function DependenceMap() {
-  return <h1>Mapa de Dependencias y Covarianzas</h1>;
+  usePageTitle("Dependencia entre estaciones");
+  return <DependenceView />;
 }

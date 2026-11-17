@@ -1,0 +1,196 @@
+/*
+ * Panel de estación («lectura de instrumento»), compartido por el Tab 1 (serie) y el Tab 2 (modelo): encabezado con el nombre,
+ * cifras grandes tabulares con su etiqueta, y barras finas que son solo decorativas (el valor siempre está en texto).
+ */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Entra con un desvanecido corto al elegir una estación (sin movimiento si el sistema lo pide) */
+.panel {
+  animation: panel-in var(--motion-base) var(--ease);
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-2));
+  }
+}
+
+.panel:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+
+.panel-title {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.panel-title h2 {
+  margin: 0;
+}
+
+.panel-code {
+  font-weight: var(--weight-regular);
+  color: var(--fg-muted);
+}
+
+.panel-note {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-sm);
+  color: var(--fg-muted);
+}
+
+.panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.panel-section-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--fg-muted);
+}
+
+/* Cuadrícula de cifras: cada celda es una «lectura» */
+.readouts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: var(--space-3);
+}
+
+.readout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.readout h3 {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--fg-muted);
+}
+
+.readout-label {
+  font-size: var(--text-sm);
+  color: var(--fg);
+}
+
+.readout-value {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.readout-value[data-size="md"] {
+  font-size: var(--text-lg);
+}
+
+.readout-help {
+  font-size: var(--text-xs);
+  color: var(--fg-muted);
+}
+
+/* Barra fina decorativa: 0–100 %, con una marca opcional (p. ej. el corte de alerta) */
+.meter {
+  position: relative;
+  height: 0.25rem;
+  margin: var(--space-1) 0;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.meter-fill {
+  height: 100%;
+  transition: width var(--motion-base) var(--ease);
+  min-width: 1px;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+}
+
+.meter-mark {
+  position: absolute;
+  top: -0.25rem;
+  width: 2px;
+  height: 0.75rem;
+  margin-left: -1px;
+  background: var(--accent);
+}
+
+.meter-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-xs);
+  color: var(--fg-muted);
+}
+
+/* Lecturas pequeñas en fila (Tab 1: ozono, máximo, etapas) */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.25rem, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.stat-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.stat-grid dt {
+  font-size: var(--text-xs);
+  line-height: 1.35;
+  color: var(--fg-muted);
+}
+
+.stat-grid dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  line-height: 1.2;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-grid dd[data-muted] {
+  font-size: var(--text-md);
+  font-weight: var(--weight-regular);
+  color: var(--fg-muted);
+}

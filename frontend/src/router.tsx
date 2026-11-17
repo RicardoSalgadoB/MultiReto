@@ -1,30 +1,26 @@
-
 import { createBrowserRouter } from "react-router";
 
-import AnalyticsMap from "./pages/AnalyticsMap";
-import PredictionMap from "./pages/PredictionMap";
-import DependenceMap from "./pages/DependenceMap";
-
 import App from "./layouts/App";
-
+import DataLayout from "./layouts/DataLayout";
+import NotFound from "./pages/NotFound";
+import { AnalyticsMap, DependenceMap, PredictionMap } from "./pages/lazyPages";
+import RouteError from "./pages/RouteError";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
+    errorElement: <RouteError />,
     children: [
       {
-        index: true,
-        element: <AnalyticsMap />,
+        element: <DataLayout />,
+        children: [
+          { index: true, element: <AnalyticsMap /> },
+          { path: "prediction", element: <PredictionMap /> },
+          { path: "dependence", element: <DependenceMap /> },
+        ],
       },
-      {
-        path: "prediction",
-        element: <PredictionMap />,
-      },
-      {
-        path: "dependence",
-        element: <DependenceMap />,
-      },
+      { path: "*", element: <NotFound /> },
     ],
   },
 ]);

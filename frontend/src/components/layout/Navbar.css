@@ -1,0 +1,89 @@
+.navbar {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.navbar-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--space-5);
+  width: 100%;
+  max-width: calc(var(--page-max) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 3.25rem;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.005em;
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+.brand-mark-bg {
+  fill: var(--ink);
+}
+
+.brand-mark-text {
+  fill: var(--on-ink);
+  font-family: var(--font-sans);
+}
+
+/* Pestañas: la activa lleva subrayado de tinta además de peso; no depende del color */
+.navbar nav {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--control-border) transparent;
+}
+
+.navbar ul {
+  display: flex;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.navbar a {
+  display: block;
+  padding: 0 var(--space-3);
+  border-bottom: 2px solid transparent;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  line-height: 3.25rem;
+  color: var(--fg-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--motion-fast) var(--ease), border-color var(--motion-fast) var(--ease);
+}
+
+.navbar a:hover {
+  color: var(--fg);
+  border-bottom-color: var(--border);
+}
+
+.navbar a.active {
+  border-bottom-color: var(--ink);
+  font-weight: var(--weight-semibold);
+  color: var(--fg);
+}
+
+.navbar a:focus-visible {
+  outline-offset: -4px;
+}
+
+@media (max-width: 48rem) {
+  .navbar nav {
+    flex-basis: 100%;
+    margin-inline: calc(-1 * var(--space-3));
+  }
+}
