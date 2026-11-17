@@ -1,0 +1,32 @@
+.verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  line-height: 1.3;
+  white-space: nowrap;
+  color: var(--fg-muted);
+  background: transparent;
+}
+
+.verdict[data-size="lg"] {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-md);
+}
+
+/* Alerta: tinta invertida (texto claro sobre tinta) con triángulo relleno */
+.verdict[data-state="alert"] {
+  border-color: var(--ink);
+  color: var(--on-ink);
+  background: var(--ink);
+}
+
+.verdict-icon {
+  flex: none;
+  width: 1em;
+  height: 1em;
+}

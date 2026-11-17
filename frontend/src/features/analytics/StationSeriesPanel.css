@@ -1,0 +1,10 @@
+/* Lo común (marco, encabezado, cifras) está en components/ui/Panel.css */
+.series-title {
+  margin: 0;
+  font-size: var(--text-md);
+}
+
+.series-chart[data-loading] {
+  opacity: 0.6;
+  transition: opacity var(--motion-fast) var(--ease);
+}

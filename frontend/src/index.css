@@ -1,111 +1,548 @@
+/*
+ * Sistema de diseño «Estación» (instrumento de campo).
+ *
+ * Reglas de uso:
+ * - Todo color, tamaño de letra, radio, sombra y duración sale de los tokens de este archivo.
+ * - El acento de interfaz (--accent, magenta) es pequeño: foco, enlaces y marcas de selección. Los estados activos usan
+ *   tinta (--ink). Ninguno se parece a las escalas de datos (viridis, probabilidad, intensidad): su distancia de color
+ *   (ΔE00) frente a ellas se midió al elegir el acento.
+ * - El color nunca es el único canal: los estados llevan forma o texto además de color.
+ * - El tema sigue al sistema (prefers-color-scheme); no hay interruptor.
+ */
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  /* ---- Color: superficies y texto (tema claro) ---- */
+  --bg: #eef1f3;
+  --surface: #ffffff;
+  --surface-2: #e6ebee;
+  --border: #c9d1d6;
+  --control-border: #8c8898; /* ≥ 3:1 sobre --surface: fija por contraste */
+  --fg: #14212b;
+  --fg-muted: #48596a;
+  --ink: #14212b; /* estados activos: relleno */
+  --on-ink: #ffffff;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* ---- Color: acento y estados ---- */
+  --accent: #a3217f;
+  --accent-soft: rgba(163, 33, 127, 0.1);
+  --warn: #8a5a00;
+  --warn-soft: rgba(217, 119, 6, 0.14);
+  --error: #b3261e;
+  --error-soft: rgba(179, 38, 30, 0.09);
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
+  /* ---- Color: gráficas ---- */
+  --chart-line: #1f4e8c;
+  --chart-ref-u: #8a5a00;
+  --chart-ref-norm: #b3261e;
+  --chart-grid: #e1e6ea;
+  --chart-axis: #48596a;
+
+  /* ---- Color: mapa (las teselas de OSM son claras en ambos temas; no se filtran) ---- */
+  --map-bg: #f2efe9;
+  --map-halo: #a3217f; /* halo de selección: contrasta con el mapa claro en ambos temas */
+  --map-label: #14212b;
+  --map-label-halo: #ffffff;
+  --overlay: rgba(20, 33, 43, 0.9);
+  --on-overlay: #ffffff;
+
+  /* ---- Iconos propios (máscaras SVG): se tiñen con el color del contexto ---- */
+  --icon-warn: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2 1 21h22L12 2Zm-1 7h2v6h-2V9Zm0 8h2v2h-2v-2Z'/%3E%3C/svg%3E");
+  --icon-info: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1 5h2v2h-2V7Zm0 4h2v6h-2v-6Z'/%3E%3C/svg%3E");
+
+  --icon-pin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7Zm0 9.500A2.500 2.500 0 1 1 12 6.500a2.500 2.500 0 0 1 0 5Z'/%3E%3C/svg%3E");
+
+  /* ---- Tipografía: solo fuentes del sistema (0 kB) ---- */
+  --font-sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", sans-serif;
+  --font-display: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "Cascadia Code", Consolas, "SF Mono", monospace;
+  /* escala de 5 pasos (en rem: respeta el tamaño de letra del navegador) */
+  --text-xs: 0.75rem; /* 12 */
+  --text-sm: 0.875rem; /* 14 */
+  --text-md: 1rem; /* 16 */
+  --text-lg: 1.25rem; /* 20 */
+  --text-xl: 2rem; /* 32 */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+
+  /* ---- Espaciado (base 4 px) ---- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  /* ---- Forma ---- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-pill: 999px;
+  --shadow-sm: 0 1px 2px rgba(20, 33, 43, 0.14);
+  --shadow-md: 0 6px 16px rgba(20, 33, 43, 0.18);
+  --marker-shadow: 0 1px 1.5px rgba(0, 0, 0, 0.55);
+
+  /* ---- Movimiento (prefers-reduced-motion se respeta al final del archivo) ---- */
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* ---- Layout ---- */
+  --page-max: 80rem;
+  --gutter: clamp(1rem, 3vw, 2rem);
+  --sidebar-w: 19rem;
+  --panel-w: 22.5rem;
+  --control-h: 2.25rem;
+
   color-scheme: light dark;
-  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 100%;
+  line-height: var(--leading-normal);
+  color: var(--fg);
   background: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
+    --bg: #0e1418;
+    --surface: #151d23;
+    --surface-2: #1c262d;
+    --border: #2a353d;
+    --control-border: #6b7280;
+    --fg: #e6ecef;
+    --fg-muted: #a5b3bd;
+    --ink: #e6ecef;
+    --on-ink: #0e1418;
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
+    --accent: #e58ac9;
+    --accent-soft: rgba(229, 138, 201, 0.14);
+    --warn: #f2b84b;
+    --warn-soft: rgba(242, 184, 75, 0.13);
+    --error: #ff8a80;
+    --error-soft: rgba(255, 138, 128, 0.13);
+
+    --chart-line: #8fb8ee;
+    --chart-ref-u: #f2b84b;
+    --chart-ref-norm: #ff8a80;
+    --chart-grid: #232d34;
+    --chart-axis: #a5b3bd;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.55);
   }
 }
 
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
+/* ------------------------------------------------------------------------------------------ base */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  font-size: var(--text-md);
+  font-variant-numeric: tabular-nums; /* las cifras alinean en columnas */
+}
+
+#root {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+main:focus {
+  outline: none;
 }
 
 h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+h2,
+h3 {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-display);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  color: var(--fg);
 }
 
 h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
+  font-size: clamp(var(--text-lg), 6.4vw, var(--text-xl));
+  letter-spacing: -0.01em;
 }
+
 h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
+  font-size: var(--text-lg);
+  letter-spacing: -0.005em;
 }
+
+h3 {
+  font-size: var(--text-md);
+}
+
 p {
   margin: 0;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+code {
+  padding: 0.05em 0.4em;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--fg);
+  background: var(--surface-2);
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+a {
+  color: var(--accent);
+  text-underline-offset: 0.2em;
+}
+
+/* Foco visible consistente en todos los controles */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ------------------------------------------------------------------------------------ componentes */
+
+/* Botón: secundario por defecto; con aria-pressed="true" pasa a tinta (estado activo) */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-h);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--fg);
+  background: var(--surface);
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--ease), border-color var(--motion-fast) var(--ease);
+}
+
+.button:hover:not(:disabled) {
+  border-color: var(--fg);
+  background: var(--surface-2);
+}
+
+.button:active:not(:disabled) {
+  background: var(--border);
+}
+
+.button:disabled {
+  color: var(--fg-muted);
+  border-color: var(--border);
+  background: var(--surface-2);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.button[aria-pressed="true"] {
+  border-color: var(--ink);
+  color: var(--on-ink);
+  background: var(--ink);
+}
+
+.button[aria-pressed="true"]:hover:not(:disabled) {
+  border-color: var(--ink);
+  background: var(--ink);
+  opacity: 0.9;
+}
+
+/* Enlace con aspecto de texto */
+.link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* Campos de formulario */
+input[type="date"],
+input[type="number"] {
+  min-height: var(--control-h);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--fg);
+  background: var(--surface);
+  transition: border-color var(--motion-fast) var(--ease);
+}
+
+input[type="date"]:hover,
+input[type="number"]:hover {
+  border-color: var(--fg);
+}
+
+input[type="date"]:disabled,
+input[type="number"]:disabled {
+  color: var(--fg-muted);
+  background: var(--surface-2);
+  cursor: not-allowed;
+}
+
+input[aria-invalid="true"] {
+  border-color: var(--error);
+  box-shadow: inset 0 0 0 1px var(--error);
+}
+
+/* Slider (rango): pista y pulgar propios, con estados de hover, foco y deshabilitado */
+input[type="range"] {
+  --track-h: 4px;
+  --thumb: 1.25rem;
+  height: var(--thumb);
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Relleno de progreso: --fill (un porcentaje) lo pone el componente en el atributo style, calculado del valor ya existente */
+input[type="range"]::-webkit-slider-runnable-track {
+  height: var(--track-h);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(to right, var(--ink) var(--fill, 0%), var(--control-border) var(--fill, 0%));
+}
+
+input[type="range"]::-moz-range-track {
+  height: var(--track-h);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(to right, var(--ink) var(--fill, 0%), var(--control-border) var(--fill, 0%));
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: var(--thumb);
+  height: var(--thumb);
+  margin-top: calc((var(--track-h) - var(--thumb)) / 2);
+  border: 3px solid var(--surface);
+  border-radius: 50%;
+  background: var(--ink);
+  box-shadow: 0 0 0 1px var(--ink);
+  transition: transform var(--motion-fast) var(--ease);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: var(--thumb);
+  height: var(--thumb);
+  border: 3px solid var(--surface);
+  border-radius: 50%;
+  background: var(--ink);
+  box-shadow: 0 0 0 1px var(--ink);
+}
+
+input[type="range"]:hover::-webkit-slider-thumb {
+  transform: scale(1.1);
+}
+
+input[type="range"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Aviso: franja a la izquierda + texto. Las advertencias del modelo usan la variante --warn con icono propio. */
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--ink);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: var(--text-sm);
+}
+
+.notice--warn {
+  border-color: var(--warn);
+  border-left-width: 4px;
+  background: var(--warn-soft);
+  color: var(--fg);
+}
+
+.notice--warn::before,
+.notice--info::before {
+  content: "";
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  -webkit-mask: var(--notice-icon) center / contain no-repeat;
+  mask: var(--notice-icon) center / contain no-repeat;
+}
+
+.notice--warn::before {
+  --notice-icon: var(--icon-warn);
+  background: var(--warn);
+}
+
+.notice--info::before {
+  --notice-icon: var(--icon-info);
+  background: var(--ink);
+}
+
+/* Estado vacío del panel de estación: invita a elegir una estación en el mapa */
+.empty-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px dashed var(--control-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--fg);
+}
+
+.empty-hint::before {
+  content: "";
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: var(--fg-muted);
+  -webkit-mask: var(--icon-pin) center / contain no-repeat;
+  mask: var(--icon-pin) center / contain no-repeat;
+}
+
+/*
+ * Aviso de honestidad del modelo (periodo de entrenamiento, dial que no afecta, valores recortados o completados):
+ * franja gruesa + icono + texto a color pleno. Se distingue del texto de ayuda (.control-help), que es pequeño y gris.
+ */
+.callout {
+  --callout-color: var(--warn);
+  --callout-soft: var(--warn-soft);
+  --callout-icon: var(--icon-warn);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--callout-color);
+  border-left-width: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--callout-soft);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  color: var(--fg);
+}
+
+.callout::before {
+  content: "";
+  grid-row: 1 / span 3;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-top: 0.1em;
+  background: var(--callout-color);
+  -webkit-mask: var(--callout-icon) center / contain no-repeat;
+  mask: var(--callout-icon) center / contain no-repeat;
+}
+
+.callout > * {
+  grid-column: 2;
+  margin: 0;
+}
+
+.callout--info {
+  --callout-color: var(--ink);
+  --callout-soft: var(--surface-2);
+  --callout-icon: var(--icon-info);
+  border-color: var(--border);
+  border-left-color: var(--ink);
+}
+
+.callout-title {
+  font-weight: var(--weight-semibold);
+}
+
+/* ------------------------------------------------------------------------------- utilidades globales */
+
+/* Enlace para saltar al contenido: solo se ve al recibir el foco con el teclado */
+.skip-link {
+  position: absolute;
+  left: var(--space-2);
+  top: -4rem;
+  z-index: 3000;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--ink);
+  color: var(--on-ink);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: var(--space-2);
+}
+
+/* Aviso discreto de servidor lento */
+.slow-notice {
+  margin: 0;
+  padding: var(--space-2) var(--gutter);
+  border-bottom: 1px solid var(--warn);
+  background: var(--warn-soft);
+  font-size: var(--text-sm);
+  color: var(--fg);
+  text-align: center;
+}
+
+/* Foco visible en los controles de Leaflet */
+.leaflet-bar a:focus-visible,
+.leaflet-container:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+}
+
+/* Movimiento reducido: sin transiciones ni animaciones (el indicador de carga gira más despacio) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .spinner {
+    animation-duration: 2.4s !important;
+    animation-iteration-count: infinite !important;
+  }
 }

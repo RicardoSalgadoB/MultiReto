@@ -1,0 +1,163 @@
+/*
+ * Leyenda en banda compacta (Tabs 1, 2 y 3): a la izquierda la escala (degradado con marcas), a la derecha las formas
+ * o las líneas; abajo, notas en letra pequeña. Todo es texto además de dibujo: los lectores de pantalla leen cada entrada.
+ */
+.map-legend {
+  display: grid;
+  grid-template-columns: minmax(14rem, 20rem) minmax(0, 1fr);
+  gap: var(--space-3) var(--space-5);
+  align-items: start;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 48rem) {
+  .map-legend {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.legend-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.legend-head h3 {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.legend-unit {
+  font-size: var(--text-xs);
+  color: var(--fg-muted);
+}
+
+.legend-bar {
+  height: 0.625rem;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-pill);
+}
+
+.legend-ticks {
+  position: relative;
+  height: 1.25rem;
+  margin-top: var(--space-1);
+}
+
+.legend-ticks[data-labeled] {
+  height: 2.75rem;
+}
+
+.legend-tick {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+  color: var(--fg-muted);
+}
+
+.legend-tick:first-child {
+  transform: none;
+}
+
+.legend-tick:last-child {
+  transform: translateX(-100%);
+}
+
+/* Texto de una marca ("umbral del modelo", "norma", "corte de alerta") bajo su valor, escalonado para no encimarse */
+.legend-tick-label {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: var(--weight-semibold);
+  color: var(--fg);
+}
+
+.legend-tick-label[data-row="1"] {
+  top: 1.875rem;
+}
+
+/* Entradas (formas o líneas) en fila compacta que se parte según el ancho */
+.legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legend-items li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  line-height: 1.35;
+  color: var(--fg);
+}
+
+/* En el Tab 3 cada línea de muestra lleva un texto largo: una por fila */
+.legend-items--stack {
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
+/* Las formas llevan un halo claro fino: se leen igual sobre la superficie clara y la oscura, sin parche de fondo */
+.legend-glyph {
+  display: inline-flex;
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.legend-glyph svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 1px var(--map-bg)) drop-shadow(0 0 1px var(--map-bg));
+}
+
+.legend-notes {
+  grid-column: 1 / -1;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border);
+  font-size: var(--text-xs);
+  color: var(--fg-muted);
+}
+
+.legend-notes p + p {
+  margin-top: var(--space-1);
+}
+
+/* Muestras de línea del Tab 3: línea de color con un contorno claro (como se vería sobre el mapa) */
+.line-sample {
+  flex: none;
+}
+
+.width-samples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-xs);
+}
+
+.width-samples li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--fg-muted);
+}
+
+.legend-hint {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--fg-muted);
+}
